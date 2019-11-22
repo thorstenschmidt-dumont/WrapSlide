@@ -1,0 +1,7 @@
+README.md
+setup.py
+wrapslide_env.egg-info/PKG-INFO
+wrapslide_env.egg-info/SOURCES.txt
+wrapslide_env.egg-info/dependency_links.txt
+wrapslide_env.egg-info/requires.txt
+wrapslide_env.egg-info/top_level.txt
