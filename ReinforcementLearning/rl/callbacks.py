@@ -196,9 +196,9 @@ class TrainEpisodeLogger(Callback):
         }
         print(template.format(**variables))
         
-#        output = [episode + 1,duration,episode_steps,float(episode_steps) / duration,np.sum(self.rewards[episode]),]
-#        writer = csv.writer(open("Output.csv", "a"))
-#        writer.writerow(output)
+        output = [episode + 1,duration,episode_steps,float(episode_steps) / duration,np.sum(self.rewards[episode]),]
+        writer = csv.writer(open("Output.csv", "a"))
+        writer.writerow(output)
         
         # Free up resources.
         del self.episode_start[episode]

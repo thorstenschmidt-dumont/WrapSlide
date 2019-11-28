@@ -16,6 +16,7 @@ from rl.policy import BoltzmannQPolicy, GreedyQPolicy,EpsGreedyQPolicy
 from rl.memory import SequentialMemory
 import keras.backend as K
 
+
 ENV_NAME = 'wrapslide-v0'
 
 
@@ -40,7 +41,7 @@ model.add(Flatten(input_shape=(1,) + input_shape))
 #                  input_shape=input_shape))
 #model.add(Conv2D(64, (3, 3), activation='relu'))
 #model.add(Flatten())
-model.add(Dense(10, activation='sigmoid'))
+model.add(Dense(50, activation='sigmoid'))
 model.add(Dense(num_classes, activation='sigmoid'))
 #model.add(Dropout(0.5))
 #model.add(Dense(num_classes, activation='softmax'))
@@ -69,18 +70,28 @@ memory = SequentialMemory(limit=500000, window_length=1)
 policy = EpsGreedyQPolicy()
 dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=10,
                target_model_update=1e-2, policy=policy)
-dqn.compile(Adam(lr=0.001), metrics=['mae'])
+dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 
-# Okay, now it's time to learn something! We visualize the training here for show, but this
-# slows down training quite a lot. You can always safely abort the training prematurely using
-# Ctrl + C.
-dqn.fit(env, nb_steps=10000, visualize=False, verbose=2)
+#dqn.load_weights('dqn_wrapslide-v0_weights_3Col_50Neurons.h5f')
 
-# Lets load previously saved weights
-#dqn.load_weights('dqn_wrapslide-v0_weights_4x4.h5f')
+#Now lets learn something
+#dqn.fit(env, nb_steps=1000, visualize=False, verbose=2)
 
 # After training is done, we save the final weights.
-dqn.save_weights('dqn_{}_weights_4x4.h5f'.format(ENV_NAME), overwrite=True)
+#dqn.save_weights('dqn_{}_weights_3Col_50Neurons.h5f'.format(ENV_NAME), overwrite=True)
+
+
+for i in range(50):
+    print(i)
+    dqn.load_weights('dqn_wrapslide-v0_weights_3Col_50Neurons.h5f')
+    
+    # Okay, now it's time to learn something! We visualize the training here for show, but this
+    # slows down training quite a lot. You can always safely abort the training prematurely using
+    # Ctrl + C.
+    dqn.fit(env, nb_steps=1000, visualize=False, verbose=2)
+    
+    # After training is done, we save the final weights.
+    dqn.save_weights('dqn_{}_weights_3Col_50Neurons.h5f'.format(ENV_NAME), overwrite=True)
 
 # Finally, evaluate our algorithm for 5 episodes.
-dqn.test(env, nb_episodes=5, visualize=False)
+#dqn.test(env, nb_episodes=5, visualize=False)

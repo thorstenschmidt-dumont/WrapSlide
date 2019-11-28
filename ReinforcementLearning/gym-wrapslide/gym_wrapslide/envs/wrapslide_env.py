@@ -25,24 +25,30 @@ class WrapslideEnv(gym.Env):
         self.state = None
         self.steps_beyond_done = None
         
+        self.stateList = []
+        #solved_state = np.array([[1, 1, 2, 2], [1, 1, 2, 2], [1, 1, 1, 1], [1, 1, 1, 1]])
+        solved_state = np.array([[1, 1, 2, 2], [1, 1, 2, 2], [3, 3, 1, 1], [3, 3, 1, 1]])
+        #solved_state = np.array([[1, 1, 2, 2], [1, 1, 2, 2], [3, 3, 4, 4], [3, 3, 4, 4]])
+        self.doneState = self.findcanonical(solved_state)
+        
         """
         Root = np.array([[1,1,1,1],
                          [1,1,1,1],
                          [1,1,2,2],
                          [1,1,2,2]])
         """
-        """
+        
         Root = np.array([[1,1,1,1],
                          [1,1,1,1],
                          [2,2,3,3],
                          [2,2,3,3]])
-        """
         
+        """
         Root = np.array([[1,1,2,2],
                          [1,1,2,2],
                          [3,3,4,4],
                          [3,3,4,4]])
-        
+        """
         #Generate the bottom part of the tree
         #print(Root)
         # Level 1
@@ -206,13 +212,6 @@ class WrapslideEnv(gym.Env):
         self.Level2UniqueB = Level2UniqueB
         self.Level1UniqueB = Level1CanonicalB
         
-        self.stateList = []
-        #solved_state = np.array([[1, 1, 2, 2], [1, 1, 2, 2], [1, 1, 1, 1], [1, 1, 1, 1]])
-        #solved_state = np.array([[1, 1, 2, 2], [1, 1, 2, 2], [3, 3, 1, 1], [3, 3, 1, 1]])
-        solved_state = np.array([[1, 1, 2, 2], [1, 1, 2, 2], [3, 3, 4, 4], [3, 3, 4, 4]])
-        self.doneState = self.findcanonical(solved_state)
-        
-        
    
     def step(self, action):
         '''
@@ -234,115 +233,62 @@ class WrapslideEnv(gym.Env):
         #print(self.state)
         #print('')
         stateM = self.state
-#        print(action)
-        """
-        # Determine the other possible outcomes
-        possibilities = []
-        for i in range(0,n-1):
-           if i == 2:
-               i = 3
-           grid = self.move_top_half(stateM,2-i)
-           possibilities.append(grid)
-           grid = self.move_bottom_half(stateM,2-i)
-           possibilities.append(grid)
-           grid = self.move_left_half(stateM,2-i)
-           possibilities.append(grid)
-           grid = self.move_right_half(stateM,2-i)
-           possibilities.append(grid)
-        
-        
-        for i in range(len(possibilities)):
-            if possibilities[i] in self.Level6UniqueB:
-                    probability = 6
-                elif canonical in self.Level5UniqueB:
-                    probability = 5
-                elif canonical in self.Level4UniqueB:
-                    probability = 4
-                elif canonical in self.Level3UniqueB:
-                    probability = 3
-                elif canonical in self.Level2UniqueB:
-                    probability = 2
-                elif canonical in self.Level1UniqueB:
-                    probability = 1
-        """
+        slide = action
+            #First its gonna do the action that was chosen by the agent.
+        if slide == 0:
+            stateM = self.move_left_half(stateM, 1)
+        elif slide == 1:
+            stateM = self.move_left_half(stateM, -1)
+        elif slide == 2:
+            stateM = self.move_left_half(stateM, 2)
+        elif slide == 3:
+            stateM = self.move_right_half(stateM, 1)
+        elif slide == 4:
+            stateM = self.move_right_half(stateM, -1)
+        elif slide == 5:
+            stateM = self.move_right_half(stateM, 2)
+        elif slide == 6:
+            stateM = self.move_top_half(stateM, -1)
+        elif slide == 7:
+            stateM = self.move_top_half(stateM, 1)
+        elif slide == 8:
+            stateM = self.move_top_half(stateM, 2)
+        elif slide == 9:
+            stateM = self.move_bottom_half(stateM, -1)
+        elif slide == 10:
+            stateM = self.move_bottom_half(stateM, 1)
+        elif slide == 11:
+            stateM = self.move_bottom_half(stateM, 2)
+        else:
+            raise ValueError("Unrecognized direction: {}".format(slide))
+
+        #print('After Step is completed, state is:')
+        #print(self.state)
         canonical = self.findcanonical(stateM)
-        if action[0] != 12:
-            slide = action[0]
-            #print(slide)
-                #First its gonna do the action that was chosen by the agent.
-            if slide == 0:
-                stateM = self.move_left_half(stateM, 1)
-            elif slide == 1:
-                stateM = self.move_left_half(stateM, -1)
-            elif slide == 2:
-                stateM = self.move_left_half(stateM, 2)
-            elif slide == 3:
-                stateM = self.move_right_half(stateM, 1)
-            elif slide == 4:
-                stateM = self.move_right_half(stateM, -1)
-            elif slide == 5:
-                stateM = self.move_right_half(stateM, 2)
-            elif slide == 6:
-                stateM = self.move_top_half(stateM, -1)
-            elif slide == 7:
-                stateM = self.move_top_half(stateM, 1)
-            elif slide == 8:
-                stateM = self.move_top_half(stateM, 2)
-            elif slide == 9:
-                stateM = self.move_bottom_half(stateM, -1)
-            elif slide == 10:
-                stateM = self.move_bottom_half(stateM, 1)
-            elif slide == 11:
-                stateM = self.move_bottom_half(stateM, 2)
-            else:
-                raise ValueError("Unrecognized direction: {}".format(slide))
-    
-            #print('After Step is completed, state is:')
-            #print(self.state)
-            canonical = self.findcanonical(stateM)
-                #checks list of past actions to check if it has been there before
-            iso = 0
-            """
-    #        actions = [a for a in range(12)]
-            counter = 0
-            while iso == 0 and counter < 12:
-                if canonical in self.stateList:
-                    iso = 0
-    #                for i in range(len(actions)):
-    #                    if actions[i] == action:
-    #                        np.delete(actions,i)
-    #                action = random.choice(actions)
-                    stateM = self.random_action(counter)
-                    counter = counter + 1
-                    #print(stateM)
-                    canonical = self.findcanonical(stateM)
-                else:
-                    self.stateList.append(canonical)
-                    iso = 1
-            action = counter
-            """
-            for i in range(len(self.stateList)):
-                if self.stateList[i] == canonical:
-                    iso += 1
-                    #print('Found iso')
-            #print('')
-            #print('Canonical is:')
+            #checks list of past actions to check if it has been there before
+#        iso = 0
+#        for i in range(len(self.stateList)):
+#            if self.stateList[i] == canonical:
+#                iso += 1
+                #print('Found iso')
+        #print('')
+        #print('Canonical is:')
+        #print(canonical)
+        
+                
+#        if iso >= 1:
+#            stateM = self.random_action()
+            #print(stateM)
+#            canonical = self.findcanonical(stateM)
+            #print('New canonical is:')
             #print(canonical)
-            
-                    
-    #        if iso >= 1:
-    #            stateM = self.random_action()
-                #print(stateM)
-    #            canonical = self.findcanonical(stateM)
-                #print('New canonical is:')
-                #print(canonical)
-    #            self.stateList.append(canonical)
-    #        else:
-            self.stateList.append(canonical)
+#            self.stateList.append(canonical)
+#        else:
+#            self.stateList.append(canonical)
         #print('')
         #print('List of past actions:')
         #print(self.stateList)
-
+        
         
         #print(self.stateList)
 #        #check if done:
@@ -350,19 +296,20 @@ class WrapslideEnv(gym.Env):
             reward = 1
             done = True
             #print(self.stateList)
-        elif action[1] == True:
-            reward = 0
-            done = True
         else:
             reward = 0
             done = False
-            
         #print('what')
         #print(self.state)
-        #self.state = stateM
-        #print(stateM)
         self.state = self.CanonicalToGrid(canonical)
-        print(self.state)
+#        if (self.state == 2).sum() > 4:
+#            np.place(self.state, self.state==1, 5)
+#            np.place(self.state, self.state==2, 1)
+#            np.place(self.state, self.state==5, 2)
+#        if (self.state == 3).sum() > 4:
+#            np.place(self.state, self.state==1, 5)
+#            np.place(self.state, self.state==3, 1)
+#            np.place(self.state, self.state==5, 3)
         state1 = np.zeros(16)
         for i in range(4):
             for j in range(4):
@@ -378,9 +325,11 @@ class WrapslideEnv(gym.Env):
             
 #reset    
     def reset(self):
-        state = self.generate_two(4)
+        #state = self.generate_two(4)
         #state = self.generate_threeColour(4)
+        state = self.generate_threeColour_initialise(4)
         #state = self.generate_fourColour(4)
+        #state = self.generate_fourColour_initialise(4)
         state = state.astype(int)
         state1 = np.zeros(16)
         for i in range(4):
@@ -402,91 +351,91 @@ class WrapslideEnv(gym.Env):
     '''
     other functions:
     '''
-    def move(self, action, grid):
-        self.DIRECTIONS = ['lhu', 'lhd', 'rhu', 'rhd', 'thl', 'thr', 'bhl', 'bhr']
-        
-        stateM = grid
-        iso = 0
-        rand = 0
-        while iso == 0:
-            '''
-            probleem is dat hy kan hierso vashaak en vreeslik baie steps doen net om by
-            'n nuwe state uit te kom.
-            
-            So, voorheen het ek net gecheck of canonical op lys is na agent se action, en as dit was
-            enige random action gekies (al het dit result in a canonical wat al op die lys is of die
-            random action die agent se action is {letterlik net random action = random.randrange(8)}) 
-            en aanbeweeg. 
-            
-            My probleem nou is dat as ek 'n random action moet kies totdat ons by 'n state uitkom wat
-            nie equivalent is aan 'n vorige state nie, dan kan dit veroorsaak dat dit in 'n loop hier vashaak
-            en tegnies meer as een move/step doen. Gaan dit nie die algorithm deurmekaar maak as die
-            agent, byvoorbeeld, action 2 kies, maar dan in die agtergrond word daar 100 steps gedoen
-            want alles is equivalent aan vorige states. Dan kry die agent 'n observation wat hy dink
-            is as gevolg van action 2, maar is eintlik 'n kombinasie van 100 actions? Want die agent
-            is eintlik net supposed om een uit 8 actions te kies wat result in 1 'slide' move in een van
-            die 8 rigtings, maar a.g.v. hierdie loop kan daar amper 'n infinite amount of slides gedoen word
-            in verskillende rigtings.
-            
-            en wat as die beste manier om die puzzle te solve is om terug te beweeg na 'n vorige state toe?
-            
-            '''
-            slide = self.DIRECTIONS[action]
-            #First its gonna do the action that was chosen by the agent.
-            if slide == 'lhu':
-                stateM = self.move_left_half(stateM, 1)
-            elif slide == 'lhd':
-                stateM = self.move_left_half(stateM, -1)
-            elif slide == 'rhu':
-                stateM = self.move_right_half(stateM, 1)
-            elif slide == 'rhd':
-                stateM = self.move_right_half(stateM, -1)
-            elif slide == 'thl':
-                stateM = self.move_top_half(stateM, -1)
-            elif slide == 'thr':
-                stateM = self.move_top_half(stateM, 1)
-            elif slide == 'bhl':
-                stateM = self.move_bottom_half(stateM, -1)
-            elif slide == 'bhr':
-                stateM = self.move_bottom_half(stateM, 1)
-            else:
-                raise ValueError("Unrecognized direction: {}".format(slide))
-            #print('after first move')
-            #print(stateM)
-            #get canonical
-            canonical = self.findcanonical(stateM)
-            #checks list of past actions to check if it has been there before
-            for i in range(len(self.stateList)):
-                if self.stateList[i] == canonical:
-                    iso += 1
-                    #print('Found iso')
-                
-            if iso == 0 : #current state has not is not equivalent to past states
-                #print('did not find iso')
-                break
-                
-            else:
-                iso = 0 #so that while loop runs again
-                #print('random action')
-                action = random.randrange(12)
-                rand += 1
-                if rand > 6: #not sure about this, it just breaks out of while loop
-                    break
-            
-        return stateM
-#            if iso > 0:
-#                #print('')
-#                #print('Has been there before, selecting new random action.')
-#                self.state = self.random_action()       #if it has been there before, select random action
-#                #print('State after random action:')
-#                #print(self.state)
-#                iso = 0
-#                canonical = self.findcanonical(self.state)
+#    def move(self, action, grid):
+#        self.DIRECTIONS = ['lhu', 'lhd', 'rhu', 'rhd', 'thl', 'thr', 'bhl', 'bhr']
+#        
+#        stateM = grid
+#        iso = 0
+#        rand = 0
+#        while iso == 0:
+#            '''
+#            probleem is dat hy kan hierso vashaak en vreeslik baie steps doen net om by
+#            'n nuwe state uit te kom.
+#            
+#            So, voorheen het ek net gecheck of canonical op lys is na agent se action, en as dit was
+#            enige random action gekies (al het dit result in a canonical wat al op die lys is of die
+#            random action die agent se action is {letterlik net random action = random.randrange(8)}) 
+#            en aanbeweeg. 
+#            
+#            My probleem nou is dat as ek 'n random action moet kies totdat ons by 'n state uitkom wat
+#            nie equivalent is aan 'n vorige state nie, dan kan dit veroorsaak dat dit in 'n loop hier vashaak
+#            en tegnies meer as een move/step doen. Gaan dit nie die algorithm deurmekaar maak as die
+#            agent, byvoorbeeld, action 2 kies, maar dan in die agtergrond word daar 100 steps gedoen
+#            want alles is equivalent aan vorige states. Dan kry die agent 'n observation wat hy dink
+#            is as gevolg van action 2, maar is eintlik 'n kombinasie van 100 actions? Want die agent
+#            is eintlik net supposed om een uit 8 actions te kies wat result in 1 'slide' move in een van
+#            die 8 rigtings, maar a.g.v. hierdie loop kan daar amper 'n infinite amount of slides gedoen word
+#            in verskillende rigtings.
+#            
+#            en wat as die beste manier om die puzzle te solve is om terug te beweeg na 'n vorige state toe?
+#            
+#            '''
+#            slide = self.DIRECTIONS[action]
+#            #First its gonna do the action that was chosen by the agent.
+#            if slide == 'lhu':
+#                stateM = self.move_left_half(stateM, 1)
+#            elif slide == 'lhd':
+#                stateM = self.move_left_half(stateM, -1)
+#            elif slide == 'rhu':
+#                stateM = self.move_right_half(stateM, 1)
+#            elif slide == 'rhd':
+#                stateM = self.move_right_half(stateM, -1)
+#            elif slide == 'thl':
+#                stateM = self.move_top_half(stateM, -1)
+#            elif slide == 'thr':
+#                stateM = self.move_top_half(stateM, 1)
+#            elif slide == 'bhl':
+#                stateM = self.move_bottom_half(stateM, -1)
+#            elif slide == 'bhr':
+#                stateM = self.move_bottom_half(stateM, 1)
+#            else:
+#                raise ValueError("Unrecognized direction: {}".format(slide))
+#            #print('after first move')
+#            #print(stateM)
+#            #get canonical
+#            canonical = self.findcanonical(stateM)
+#            #checks list of past actions to check if it has been there before
+#            for i in range(len(self.stateList)):
+#                if self.stateList[i] == canonical:
+#                    iso += 1
+#                    #print('Found iso')
 #                
-#                for i in range(len(self.stateList)):                        #checks list of past actions to check if it has been there before
-#                    if self.stateList[i] == canonical:
-#                        iso += 1
-#                while iso > 0:
+#            if iso == 0 : #current state has not is not equivalent to past states
+#                #print('did not find iso')
+#                break
+#                
+#            else:
+#                iso = 0 #so that while loop runs again
+#                #print('random action')
+#                action = random.randrange(8)
+#                rand += 1
+##                if rand > 6: #not sure about this, it just breaks out of while loop
+##                    break
+#            
+#        return stateM
+##            if iso > 0:
+##                #print('')
+##                #print('Has been there before, selecting new random action.')
+##                self.state = self.random_action()       #if it has been there before, select random action
+##                #print('State after random action:')
+##                #print(self.state)
+##                iso = 0
+##                canonical = self.findcanonical(self.state)
+##                
+##                for i in range(len(self.stateList)):                        #checks list of past actions to check if it has been there before
+##                    if self.stateList[i] == canonical:
+##                        iso += 1
+##                while iso > 0:
             
                     
             
@@ -524,10 +473,10 @@ class WrapslideEnv(gym.Env):
     
         return state.astype(int)
     
-    def random_action(self, action):
+    def random_action(self):
 
         #self.DIRECTIONS = ['lhu', 'lhd', 'rhu', 'rhd', 'thl', 'thr', 'bhl', 'bhr']
-        rand_action = action#random.randrange(12)
+        rand_action = random.randrange(12)
         #print('with random number of:')
         #print(rand_action)
         slide = rand_action
@@ -631,6 +580,21 @@ class WrapslideEnv(gym.Env):
     
                     #print("i",i,"j",j,initial[i][j])
         return initial
+    
+    def generate_threeColour_initialise(self, n):
+        rand = random.randint(0,len(self.Level3UniqueB)-1)
+        canonical = self.Level3UniqueB[rand]
+        initial = self.CanonicalToGrid(canonical)
+#        if (initial == 2).sum() > 4:
+#            np.place(initial, initial==1, 5)
+#            np.place(initial, initial==2, 1)
+#            np.place(initial, initial==5, 2)
+#        if (initial == 3).sum() > 4:
+#            np.place(initial, initial==1, 5)
+#            np.place(initial, initial==3, 1)
+#            np.place(initial, initial==5, 3)
+#        print(initial)
+        return initial
 
     def generate_fourColour(self, n):
         one=0
@@ -676,6 +640,21 @@ class WrapslideEnv(gym.Env):
                     #         rand = random.randrange(n) + 1
     
                     #print("i",i,"j",j,initial[i][j])
+        return initial
+    
+    def generate_fourColour_initialise(self, n):
+        rand = random.randint(0,len(self.Level6UniqueB)-1)
+        canonical = self.Level6UniqueB[rand]
+        initial = self.CanonicalToGrid(canonical)
+ #       if (initial == 2).sum() > 4:
+ #           np.place(initial, initial==1, 5)
+ #           np.place(initial, initial==2, 1)
+ #           np.place(initial, initial==5, 2)
+ #       if (initial == 3).sum() > 4:
+ #           np.place(initial, initial==1, 5)
+ #           np.place(initial, initial==3, 1)
+ #           np.place(initial, initial==5, 3)
+#        print(initial)
         return initial
 
 #Convert array of state (grid) into a bitstream
@@ -957,3 +936,5 @@ class WrapslideEnv(gym.Env):
                 j += 1
             i += 1
         return state.astype(int)
+    
+        
