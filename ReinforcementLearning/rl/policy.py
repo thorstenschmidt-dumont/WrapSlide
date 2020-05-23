@@ -198,6 +198,24 @@ class GreedyQPolicy(Policy):
         return action
 
 
+class GreedyQTestPolicy(Policy):
+    """Implement the greedy policy
+
+    Greedy policy returns the current best action according to q_values
+    """
+    def select_action(self, q_values):
+        """Return the selected action
+
+        # Arguments
+            q_values (np.ndarray): List of the estimations of Q for each action
+
+        # Returns
+            Selection action
+        """
+        assert q_values.ndim == 1
+        action = q_values#np.argmax(q_values)
+        return action
+
 class BoltzmannQPolicy(Policy):
     """Implement the Boltzmann Q Policy
 

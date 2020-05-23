@@ -1,4 +1,4 @@
-#JE KNOLL
+#JE KNOLL & T Schmidt-Dumont
 #Wrapslide Environment V0
 
 
@@ -9,63 +9,86 @@ from bitstring import BitStream
 import numpy as np
 import random
 import copy
-
+import math
  
 class WrapslideEnv(gym.Env):  
     #metadata = {'render.modes': ['human']}
     
     def __init__(self):
-        high = np.array([4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4])
-        low= np.array([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
         
-        self.action_space = spaces.Discrete(12) 
-        self.observation_space = spaces.Box(low,high,dtype=np.float32)
+        #Define the size of the grid and the number of colours here.
+        self.size = 4
+        self.colours = 3
+        self.initialise = True
+        self.level = 2
+        self.test = False
+        
+        high = np.repeat(4, 4*self.size)
+        low = np.repeat(0, 4*self.size)
+        
+        self.action_space = spaces.Discrete(4*(self.size-1))
+        #self.observation_space = spaces.Box(low,high,dtype=np.float32)
+        self.observation_space = spaces.Box(low=1,high=4, shape=(self.size, self.size,1), dtype=np.uint8)
         self.seed()
         self.viewer = None
         self.state = None
         self.steps_beyond_done = None
         
         self.stateList = []
-        #solved_state = np.array([[1, 1, 2, 2], [1, 1, 2, 2], [1, 1, 1, 1], [1, 1, 1, 1]])
-        solved_state = np.array([[1, 1, 2, 2], [1, 1, 2, 2], [3, 3, 1, 1], [3, 3, 1, 1]])
-        #solved_state = np.array([[1, 1, 2, 2], [1, 1, 2, 2], [3, 3, 4, 4], [3, 3, 4, 4]])
+        
+        if self.colours == 2:
+            x = np.array([[1,1]])
+            solved_state = np.repeat(x,self.size/2,1)
+            for i in range(int(self.size/2)-1):
+                y = np.repeat(x,self.size/2,1)
+                solved_state = np.vstack((solved_state,y))
+            x = np.array([[1,2]])
+            for i in range(int(self.size/2)):
+                y = np.repeat(x,self.size/2,1)
+                solved_state = np.vstack((solved_state,y))
+                
+        if self.colours == 3:
+            x = np.array([[1,1]])
+            solved_state = np.repeat(x,self.size/2,1)
+            for i in range(int(self.size/2)-1):
+                y = np.repeat(x,self.size/2,1)
+                solved_state = np.vstack((solved_state,y))
+            x = np.array([[2,3]])
+            for i in range(int(self.size/2)):
+                y = np.repeat(x,self.size/2,1)
+                solved_state = np.vstack((solved_state,y))
+                
+        if self.colours == 4:
+            x = np.array([[1,2]])
+            solved_state = np.repeat(x,self.size/2,1)
+            for i in range(int(self.size/2)-1):
+                y = np.repeat(x,self.size/2,1)
+                solved_state = np.vstack((solved_state,y))
+            x = np.array([[3,4]])
+            for i in range(int(self.size/2)):
+                y = np.repeat(x,self.size/2,1)
+                solved_state = np.vstack((solved_state,y))
+        
         self.doneState = self.findcanonical(solved_state)
         
-        """
-        Root = np.array([[1,1,1,1],
-                         [1,1,1,1],
-                         [1,1,2,2],
-                         [1,1,2,2]])
-        """
-        
-        Root = np.array([[1,1,1,1],
-                         [1,1,1,1],
-                         [2,2,3,3],
-                         [2,2,3,3]])
-        
-        """
-        Root = np.array([[1,1,2,2],
-                         [1,1,2,2],
-                         [3,3,4,4],
-                         [3,3,4,4]])
-        """
+        Root = solved_state
         #Generate the bottom part of the tree
-        #print(Root)
+        print("This is the root \n", Root)
         # Level 1
         Level1 = []
         Level1CanonicalB = []
-        n=4
+        n = self.size
         for i in range(0,n-1):
-           if i == 2:
-               i = 3
-           grid = self.move_top_half(Root,2-i)
-           Level1.append(grid)
-           grid = self.move_bottom_half(Root,2-i)
-           Level1.append(grid)
-           grid = self.move_left_half(Root,2-i)
-           Level1.append(grid)
-           grid = self.move_right_half(Root,2-i)
-           Level1.append(grid)
+            #if i == 2:
+                #i = 3
+            grid = self.move_top_half(Root,n-1-i)
+            Level1.append(grid)
+            grid = self.move_bottom_half(Root,n-1-i)
+            Level1.append(grid)
+            grid = self.move_left_half(Root,n-1-i)
+            Level1.append(grid)
+            grid = self.move_right_half(Root,n-1-i)
+            Level1.append(grid)
         
         for i in range(len(Level1)):
             Level1CanonicalB.append(self.findcanonical(Level1[i]))
@@ -84,15 +107,15 @@ class WrapslideEnv(gym.Env):
         Level2Canonical = []
         for i in range(len(Level1)):
             for j in range(n-1):
-                if j == 2:
-                   j = 3
-                grid = self.move_top_half(Level1[i],2-j)
+                #if j == 2:
+                #   j = 3
+                grid = self.move_top_half(Level1[i],n-1-j)
                 Level2.append(grid)
-                grid = self.move_bottom_half(Level1[i],2-j)
+                grid = self.move_bottom_half(Level1[i],n-1-j)
                 Level2.append(grid)
-                grid = self.move_left_half(Level1[i],2-j)
+                grid = self.move_left_half(Level1[i],n-1-j)
                 Level2.append(grid)
-                grid = self.move_right_half(Level1[i],2-j)
+                grid = self.move_right_half(Level1[i],n-1-j)
                 Level2.append(grid)
             
         for i in range(len(Level2)):
@@ -109,15 +132,15 @@ class WrapslideEnv(gym.Env):
         Level3Canonical = []
         for i in range(len(Level2)):
             for j in range(n-1):
-                if j == 2:
-                   j = 3
-                grid = self.move_top_half(Level2[i],2-j)
+                #if j == 2:
+                #   j = 3
+                grid = self.move_top_half(Level2[i],n-1-j)
                 Level3.append(grid)
-                grid = self.move_bottom_half(Level2[i],2-j)
+                grid = self.move_bottom_half(Level2[i],n-1-j)
                 Level3.append(grid)
-                grid = self.move_left_half(Level2[i],2-j)
+                grid = self.move_left_half(Level2[i],n-1-j)
                 Level3.append(grid)
-                grid = self.move_right_half(Level2[i],2-j)
+                grid = self.move_right_half(Level2[i],n-1-j)
                 Level3.append(grid)
             
         for i in range(len(Level3)):
@@ -137,13 +160,13 @@ class WrapslideEnv(gym.Env):
             for j in range(n-1):
                 if j == 2:
                    j = 3
-                grid = self.move_top_half(Level3[i],2-j)
+                grid = self.move_top_half(Level3[i],n-1-j)
                 Level4.append(grid)
-                grid = self.move_bottom_half(Level3[i],2-j)
+                grid = self.move_bottom_half(Level3[i],n-1-j)
                 Level4.append(grid)
-                grid = self.move_left_half(Level3[i],2-j)
+                grid = self.move_left_half(Level3[i],n-1-j)
                 Level4.append(grid)
-                grid = self.move_right_half(Level3[i],2-j)
+                grid = self.move_right_half(Level3[i],n-1-j)
                 Level4.append(grid)
             
         for i in range(len(Level4)):
@@ -162,13 +185,13 @@ class WrapslideEnv(gym.Env):
             for j in range(n-1):
                 if j == 2:
                    j = 3
-                grid = self.move_top_half(Level4[i],2-j)
+                grid = self.move_top_half(Level4[i],n-1-j)
                 Level5.append(grid)
-                grid = self.move_bottom_half(Level4[i],2-j)
+                grid = self.move_bottom_half(Level4[i],n-1-j)
                 Level5.append(grid)
-                grid = self.move_left_half(Level4[i],2-j)
+                grid = self.move_left_half(Level4[i],n-1-j)
                 Level5.append(grid)
-                grid = self.move_right_half(Level4[i],2-j)
+                grid = self.move_right_half(Level4[i],n-1-j)
                 Level5.append(grid)
         
         for i in range(len(Level5)):
@@ -187,13 +210,13 @@ class WrapslideEnv(gym.Env):
             for j in range(n-1):
                 if j == 2:
                    j = 3
-                grid = self.move_top_half(Level5[i],2-j)
+                grid = self.move_top_half(Level5[i],n-1-j)
                 Level6.append(grid)
-                grid = self.move_bottom_half(Level5[i],2-j)
+                grid = self.move_bottom_half(Level5[i],n-1-j)
                 Level6.append(grid)
-                grid = self.move_left_half(Level5[i],2-j)
+                grid = self.move_left_half(Level5[i],n-1-j)
                 Level6.append(grid)
-                grid = self.move_right_half(Level5[i],2-j)
+                grid = self.move_right_half(Level5[i],n-1-j)
                 Level6.append(grid)
         
         for i in range(len(Level6)):
@@ -205,13 +228,17 @@ class WrapslideEnv(gym.Env):
             Level6.append(self.CanonicalToGrid(int(Level6UniqueB[i])))
             FromBottom.append(Level6UniqueB[i])
         
+        
         self.Level6UniqueB = Level6UniqueB
         self.Level5UniqueB = Level5UniqueB
         self.Level4UniqueB = Level4UniqueB
+        
         self.Level3UniqueB = Level3UniqueB
         self.Level2UniqueB = Level2UniqueB
         self.Level1UniqueB = Level1CanonicalB
-        
+        print("This is level 1\n", self.Level1UniqueB)
+        print("This is level 2\n", self.Level2UniqueB)
+        print("This is level 3\n", self.Level3UniqueB)
    
     def step(self, action):
         '''
@@ -227,291 +254,233 @@ class WrapslideEnv(gym.Env):
         '''
         #self.DIRECTIONS = ['lhu', 'lhd', 'rhu', 'rhd', 'thl', 'thr', 'bhl', 'bhr']
         #print('begin step. State is:')
-        #print(self.state)
+        
         self.state = self.bitstring_to_grid(self.state)
         #print('State after transformed to grid and before step:')
-        #print(self.state)
-        #print('')
-        stateM = self.state
-        slide = action
-            #First its gonna do the action that was chosen by the agent.
-        if slide == 0:
-            stateM = self.move_left_half(stateM, 1)
-        elif slide == 1:
-            stateM = self.move_left_half(stateM, -1)
-        elif slide == 2:
-            stateM = self.move_left_half(stateM, 2)
-        elif slide == 3:
-            stateM = self.move_right_half(stateM, 1)
-        elif slide == 4:
-            stateM = self.move_right_half(stateM, -1)
-        elif slide == 5:
-            stateM = self.move_right_half(stateM, 2)
-        elif slide == 6:
-            stateM = self.move_top_half(stateM, -1)
-        elif slide == 7:
-            stateM = self.move_top_half(stateM, 1)
-        elif slide == 8:
-            stateM = self.move_top_half(stateM, 2)
-        elif slide == 9:
-            stateM = self.move_bottom_half(stateM, -1)
-        elif slide == 10:
-            stateM = self.move_bottom_half(stateM, 1)
-        elif slide == 11:
-            stateM = self.move_bottom_half(stateM, 2)
-        else:
-            raise ValueError("Unrecognized direction: {}".format(slide))
 
-        #print('After Step is completed, state is:')
+        #print('')
+        stateM = self.state.reshape(self.size,self.size)
+        #print(stateM)
+        slide = action
+        #Only perform this step if testing == true
+        if self.test == True:
+            slide = np.argmax(action)
+        #First its gonna do the action that was chosen by the agent.
+
+        #print("Before the move the state is\n ",stateM)
+
+        x = math.floor(slide/(self.size-1))
+        y = slide % (self.size-1)
+        if x == 0:
+            if y == 0:
+                stateM = self.move_left_half(stateM, 1)
+            elif y == 1:
+                stateM = self.move_left_half(stateM, -1)
+            elif y == 2:
+                stateM = self.move_left_half(stateM, 2)
+            elif y == 3:
+                stateM = self.move_left_half(stateM, -2)
+            elif y == 4:
+                stateM = self.move_left_half(stateM, 3)
+            elif y == 5:
+                stateM = self.move_left_half(stateM, -3)
+            elif y == 6:
+                stateM = self.move_left_half(stateM, 4)
+        elif x == 1:
+            if y == 0:
+                stateM = self.move_right_half(stateM, 1)
+            elif y == 1:
+                stateM = self.move_right_half(stateM, -1)
+            elif y == 2:
+                stateM = self.move_right_half(stateM, 2)
+            elif y == 3:
+                stateM = self.move_right_half(stateM, -2)
+            elif y == 4:
+                stateM = self.move_right_half(stateM, 3)
+            elif y == 5:
+                stateM = self.move_right_half(stateM, -3)
+            elif y == 6:
+                stateM = self.move_right_half(stateM, 4)
+        elif x == 2:
+            if y == 0:
+                stateM = self.move_top_half(stateM, 1)
+            elif y == 1:
+                stateM = self.move_top_half(stateM, -1)
+            elif y == 2:
+                stateM = self.move_top_half(stateM, 2)
+            elif y == 3:
+                stateM = self.move_top_half(stateM, -2)
+            elif y == 4:
+                stateM = self.move_top_half(stateM, 3)
+            elif y == 5:
+                stateM = self.move_top_half(stateM, -3)
+            elif y == 6:
+                stateM = self.move_top_half(stateM, 4)
+        elif x == 3:
+            if y == 0:
+                stateM = self.move_bottom_half(stateM, 1)
+            elif y == 1:
+                stateM = self.move_bottom_half(stateM, -1)
+            elif y == 2:
+                stateM = self.move_bottom_half(stateM, 2)
+            elif y == 3:
+                stateM = self.move_bottom_half(stateM, -2)
+            elif y == 4:
+                stateM = self.move_bottom_half(stateM, 3)
+            elif y == 5:
+                stateM = self.move_bottom_half(stateM, -3)
+            elif y == 6:
+                stateM = self.move_bottom_half(stateM, 4)
+
+        #print('After Step is completed, state is: \n', stateM)
         #print(self.state)
         canonical = self.findcanonical(stateM)
-            #checks list of past actions to check if it has been there before
-#        iso = 0
-#        for i in range(len(self.stateList)):
-#            if self.stateList[i] == canonical:
-#                iso += 1
-                #print('Found iso')
-        #print('')
-        #print('Canonical is:')
-        #print(canonical)
         
-                
-#        if iso >= 1:
-#            stateM = self.random_action()
-            #print(stateM)
-#            canonical = self.findcanonical(stateM)
-            #print('New canonical is:')
-            #print(canonical)
-#            self.stateList.append(canonical)
-#        else:
-#            self.stateList.append(canonical)
-        #print('')
-        #print('List of past actions:')
-        #print(self.stateList)
+        #Only perform this step if testing == true
+        if self.test == True:
+            i = 1
+            while canonical in self.stateList:
+                #print(action.argsort()[-i])
+                stateM = self.random_action(action.argsort()[-i])
+                canonical = self.findcanonical(stateM)
+                i = i + 1
         
-        
-        #print(self.stateList)
-#        #check if done:
         if canonical == self.doneState:
             reward = 1
             done = True
-            #print(self.stateList)
         else:
             reward = 0
             done = False
-        #print('what')
-        #print(self.state)
+        self.stateList.append(canonical)
         self.state = self.CanonicalToGrid(canonical)
-#        if (self.state == 2).sum() > 4:
-#            np.place(self.state, self.state==1, 5)
-#            np.place(self.state, self.state==2, 1)
-#            np.place(self.state, self.state==5, 2)
-#        if (self.state == 3).sum() > 4:
-#            np.place(self.state, self.state==1, 5)
-#            np.place(self.state, self.state==3, 1)
-#            np.place(self.state, self.state==5, 3)
-        state1 = np.zeros(16)
-        for i in range(4):
-            for j in range(4):
-                state1[i*4+j] = self.state[i,j]
+
+        state1 = np.zeros(self.size**2)
+        
+        for i in range(self.size):
+            for j in range(self.size):
+                state1[i*self.size+j] = self.state[i,j]
+        
         bits = self.convert_to_bit(state1)
         self.steps_beyond_done = None
+        
         self.state = state1
-        #print('')
-        #print('State at the end of the step function:')
-        #print(self.state)
             
         return self.state,  reward, done, {}   
             
-#reset    
+   
     def reset(self):
-        #state = self.generate_two(4)
-        #state = self.generate_threeColour(4)
-        state = self.generate_threeColour_initialise(4)
-        #state = self.generate_fourColour(4)
-        #state = self.generate_fourColour_initialise(4)
+        if self.colours == 2:
+            state = self.generate_two(self.size)
+        elif self.colours == 3:
+            if self.initialise == False:
+                state = self.generate_threeColour(self.size)
+            else:
+                state = self.generate_threeColour_initialise(self.size, self.level)
+        else:
+            if self.initialise == False:
+                state = self.generate_fourColour(self.size)
+            else:
+                state = self.generate_fourColour_initialise(self.size, self.level)
         state = state.astype(int)
-        state1 = np.zeros(16)
-        for i in range(4):
-            for j in range(4):
-                state1[i*4+j] = state[i,j]
+        state1 = np.zeros(self.size**2)
+        #print("This is the starting state \n", state)
+        for i in range(self.size):
+            for j in range(self.size):
+                state1[i*self.size+j] = state[i,j]
+        
         bits = self.convert_to_bit(state1)
         self.steps_beyond_done = None
         self.stateList = []
-        self.state = bits.bin
+        #self.state = bits.bin
+        
         self.state = state1
-        #print(self.state)
+        #self.state = self.state.reshape(4,4)
+        #print("This is the start:\n", self.state)
         return self.state
-        #set to a random state
 
- 
-    #not going to render anything
-    #def render(self, mode = None):
     
-    '''
-    other functions:
-    '''
-#    def move(self, action, grid):
-#        self.DIRECTIONS = ['lhu', 'lhd', 'rhu', 'rhd', 'thl', 'thr', 'bhl', 'bhr']
-#        
-#        stateM = grid
-#        iso = 0
-#        rand = 0
-#        while iso == 0:
-#            '''
-#            probleem is dat hy kan hierso vashaak en vreeslik baie steps doen net om by
-#            'n nuwe state uit te kom.
-#            
-#            So, voorheen het ek net gecheck of canonical op lys is na agent se action, en as dit was
-#            enige random action gekies (al het dit result in a canonical wat al op die lys is of die
-#            random action die agent se action is {letterlik net random action = random.randrange(8)}) 
-#            en aanbeweeg. 
-#            
-#            My probleem nou is dat as ek 'n random action moet kies totdat ons by 'n state uitkom wat
-#            nie equivalent is aan 'n vorige state nie, dan kan dit veroorsaak dat dit in 'n loop hier vashaak
-#            en tegnies meer as een move/step doen. Gaan dit nie die algorithm deurmekaar maak as die
-#            agent, byvoorbeeld, action 2 kies, maar dan in die agtergrond word daar 100 steps gedoen
-#            want alles is equivalent aan vorige states. Dan kry die agent 'n observation wat hy dink
-#            is as gevolg van action 2, maar is eintlik 'n kombinasie van 100 actions? Want die agent
-#            is eintlik net supposed om een uit 8 actions te kies wat result in 1 'slide' move in een van
-#            die 8 rigtings, maar a.g.v. hierdie loop kan daar amper 'n infinite amount of slides gedoen word
-#            in verskillende rigtings.
-#            
-#            en wat as die beste manier om die puzzle te solve is om terug te beweeg na 'n vorige state toe?
-#            
-#            '''
-#            slide = self.DIRECTIONS[action]
-#            #First its gonna do the action that was chosen by the agent.
-#            if slide == 'lhu':
-#                stateM = self.move_left_half(stateM, 1)
-#            elif slide == 'lhd':
-#                stateM = self.move_left_half(stateM, -1)
-#            elif slide == 'rhu':
-#                stateM = self.move_right_half(stateM, 1)
-#            elif slide == 'rhd':
-#                stateM = self.move_right_half(stateM, -1)
-#            elif slide == 'thl':
-#                stateM = self.move_top_half(stateM, -1)
-#            elif slide == 'thr':
-#                stateM = self.move_top_half(stateM, 1)
-#            elif slide == 'bhl':
-#                stateM = self.move_bottom_half(stateM, -1)
-#            elif slide == 'bhr':
-#                stateM = self.move_bottom_half(stateM, 1)
-#            else:
-#                raise ValueError("Unrecognized direction: {}".format(slide))
-#            #print('after first move')
-#            #print(stateM)
-#            #get canonical
-#            canonical = self.findcanonical(stateM)
-#            #checks list of past actions to check if it has been there before
-#            for i in range(len(self.stateList)):
-#                if self.stateList[i] == canonical:
-#                    iso += 1
-#                    #print('Found iso')
-#                
-#            if iso == 0 : #current state has not is not equivalent to past states
-#                #print('did not find iso')
-#                break
-#                
-#            else:
-#                iso = 0 #so that while loop runs again
-#                #print('random action')
-#                action = random.randrange(8)
-#                rand += 1
-##                if rand > 6: #not sure about this, it just breaks out of while loop
-##                    break
-#            
-#        return stateM
-##            if iso > 0:
-##                #print('')
-##                #print('Has been there before, selecting new random action.')
-##                self.state = self.random_action()       #if it has been there before, select random action
-##                #print('State after random action:')
-##                #print(self.state)
-##                iso = 0
-##                canonical = self.findcanonical(self.state)
-##                
-##                for i in range(len(self.stateList)):                        #checks list of past actions to check if it has been there before
-##                    if self.stateList[i] == canonical:
-##                        iso += 1
-##                while iso > 0:
-            
-                    
-            
 
     def bitstring_to_grid(self, bitstring):
         togrid = bitstring[0:]
-        state = np.zeros((4, 4))
+        state = np.zeros((self.size, self.size))
         k=0
-        for i in range(4):
-            for j in range(4):
+        for i in range(self.size):
+            for j in range(self.size):
                 state[i,j] = togrid[k]
-                k=k+1
-#        for i in range(0, 4):
-#            j=0
-#            for j in range(0, 4):
-#                if togrid[k * 2:k * 2 + 2] == '00':
-#                    state[i][j] = 1
-#                    # print(k*2,k*2+2)
-#                    # print(i,j)
-#                elif togrid[k * 2:k * 2 + 2] == '01':
-#                    state[i][j] = 2
-#                    # print(k * 2, k * 2 + 2)
-#                    # print(i,j)
-#                elif togrid[k * 2:k * 2 + 2] == '10':
-#                    state[i][j] = 3
-#                    # print(k * 2, k * 2 + 2)
-#                    # print(i,j)
-#                elif togrid[k * 2: k * 2 + 2] == '11':
-#                    state[i][j] = 4
-#                    # print(k * 2, k * 2 + 2)
-#                    # print(i,j)
-#                k += 1
-#                j += 1
-#            i += 1
-    
+                k=k+1 
         return state.astype(int)
     
-    def random_action(self):
-
-        #self.DIRECTIONS = ['lhu', 'lhd', 'rhu', 'rhd', 'thl', 'thr', 'bhl', 'bhr']
-        rand_action = random.randrange(12)
-        #print('with random number of:')
-        #print(rand_action)
-        slide = rand_action
-  #      self.state = self.bitstring_to_grid(self.state)
+    def random_action(self, action):
+        
+        #rand_action = random.randrange(4*(self.size-1))
+        rand_action = action
         stateM = self.state
-        if slide == 0:
-            stateM = self.move_left_half(stateM, 1)
-        elif slide == 1:
-            stateM = self.move_left_half(stateM, -1)
-        elif slide == 2:
-            stateM = self.move_left_half(stateM, 2)
-        elif slide == 3:
-            stateM = self.move_right_half(stateM, 1)
-        elif slide == 4:
-            stateM = self.move_right_half(stateM, -1)
-        elif slide == 5:
-            stateM = self.move_right_half(stateM, 2)
-        elif slide == 6:
-            stateM = self.move_top_half(stateM, -1)
-        elif slide == 7:
-            stateM = self.move_top_half(stateM, 1)
-        elif slide == 8:
-            stateM = self.move_top_half(stateM, 2)
-        elif slide == 9:
-            stateM = self.move_bottom_half(stateM, -1)
-        elif slide == 10:
-            stateM = self.move_bottom_half(stateM, 1)
-        elif slide == 11:
-            stateM = self.move_bottom_half(stateM, 2)
-        else:
-            raise ValueError("Unrecognized direction: {}".format(slide))
+        action = rand_action
+        x = math.floor(action/(self.size-1))
+        y = action % (self.size-1)
+
+        if x == 0:
+            if y == 0:
+                stateM = self.move_left_half(stateM, 1)
+            elif y == 1:
+                stateM = self.move_left_half(stateM, -1)
+            elif y == 2:
+                stateM = self.move_left_half(stateM, 2)
+            elif y == 3:
+                stateM = self.move_left_half(stateM, -2)
+            elif y == 4:
+                stateM = self.move_left_half(stateM, 3)
+            elif y == 5:
+                stateM = self.move_left_half(stateM, -3)
+            elif y == 6:
+                stateM = self.move_left_half(stateM, 4)
+        elif x == 1:
+            if y == 0:
+                stateM = self.move_right_half(stateM, 1)
+            elif y == 1:
+                stateM = self.move_right_half(stateM, -1)
+            elif y == 2:
+                stateM = self.move_right_half(stateM, 2)
+            elif y == 3:
+                stateM = self.move_right_half(stateM, -2)
+            elif y == 4:
+                stateM = self.move_right_half(stateM, 3)
+            elif y == 5:
+                stateM = self.move_right_half(stateM, -3)
+            elif y == 6:
+                stateM = self.move_right_half(stateM, 4)
+        elif x == 2:
+            if y == 0:
+                stateM = self.move_top_half(stateM, 1)
+            elif y == 1:
+                stateM = self.move_top_half(stateM, -1)
+            elif y == 2:
+                stateM = self.move_top_half(stateM, 2)
+            elif y == 3:
+                stateM = self.move_top_half(stateM, -2)
+            elif y == 4:
+                stateM = self.move_top_half(stateM, 3)
+            elif y == 5:
+                stateM = self.move_top_half(stateM, -3)
+            elif y == 6:
+                stateM = self.move_top_half(stateM, 4)
+        elif x == 3:
+            if y == 0:
+                stateM = self.move_bottom_half(stateM, 1)
+            elif y == 1:
+                stateM = self.move_bottom_half(stateM, -1)
+            elif y == 2:
+                stateM = self.move_bottom_half(stateM, 2)
+            elif y == 3:
+                stateM = self.move_bottom_half(stateM, -2)
+            elif y == 4:
+                stateM = self.move_bottom_half(stateM, 3)
+            elif y == 5:
+                stateM = self.move_bottom_half(stateM, -3)
+            elif y == 6:
+                stateM = self.move_bottom_half(stateM, 4)
         return stateM
         
-
-    #@staticmethod
     def generate_two(self, n):
         one=0
         two=0
@@ -547,53 +516,40 @@ class WrapslideEnv(gym.Env):
             for j in range(0,n):
                 while initial[i][j]==0:
                     rand = random.randrange(n) + 1
-                    #print(rand)
                     if (rand==1 and (one<int(((n/2)**2)*2))):
                             initial[i][j] = rand
                             one=one+1
-    
-                    # elif one==int((n/2)**2):
-                    #     while rand==1:
-                    #         rand = random.randrange(n) + 1
+
     
                     if (rand == 2 and (two < int(((n/2)**2)))):
                             initial[i][j] = rand
                             two = two + 1
-                    # elif two==int((n/2)**2):
-                    #
-                    #     while rand == 2:
-                    #         rand = random.randrange(n) + 1
     
                     if (rand == 3 and (three < int(((n / 2) ** 2) ))):
                             initial[i][j] = rand
                             three = three + 1
-    
-                    # elif three==int((n/2)**2):
-                    #     while rand == 3:
-                    #         rand = random.randrange(n) + 1
-    
-    
-    
-                    # elif four==int((n/2)**2):
-                    #     while rand == 4:
-                    #         rand = random.randrange(n) + 1
-    
-                    #print("i",i,"j",j,initial[i][j])
         return initial
     
-    def generate_threeColour_initialise(self, n):
-        rand = random.randint(0,len(self.Level3UniqueB)-1)
-        canonical = self.Level3UniqueB[rand]
+    def generate_threeColour_initialise(self, n, level):
+        if level == 1:
+            rand = random.randint(0,len(self.Level1UniqueB)-1)
+            canonical = self.Level1UniqueB[rand]
+        elif level == 2:
+            rand = random.randint(0,len(self.Level2UniqueB)-1)
+            canonical = self.Level2UniqueB[rand]
+        elif level == 3:
+            rand = random.randint(0,len(self.Level3UniqueB)-1)
+            canonical = self.Level3UniqueB[rand]
+        elif level == 4:
+            rand = random.randint(0,len(self.Level4UniqueB)-1)
+            canonical = self.Level4UniqueB[rand]
+        elif level == 5:
+            rand = random.randint(0,len(self.Level5UniqueB)-1)
+            canonical = self.Level5UniqueB[rand]
+        elif level == 6:
+            rand = random.randint(0,len(self.Level6UniqueB)-1)
+            canonical = self.Level6UniqueB[rand]
         initial = self.CanonicalToGrid(canonical)
-#        if (initial == 2).sum() > 4:
-#            np.place(initial, initial==1, 5)
-#            np.place(initial, initial==2, 1)
-#            np.place(initial, initial==5, 2)
-#        if (initial == 3).sum() > 4:
-#            np.place(initial, initial==1, 5)
-#            np.place(initial, initial==3, 1)
-#            np.place(initial, initial==5, 3)
-#        print(initial)
         return initial
 
     def generate_fourColour(self, n):
@@ -606,61 +562,55 @@ class WrapslideEnv(gym.Env):
             for j in range(0,n):
                 while initial[i][j]==0:
                     rand = random.randrange(n) + 1
-                    #print(rand)
                     if (rand==1 and (one<int((n/2)**2))):
                             initial[i][j] = rand
                             one=one+1
     
-                    # elif one==int((n/2)**2):
-                    #     while rand==1:
-                    #         rand = random.randrange(n) + 1
-    
                     if (rand == 2 and (two < int(((n/2)**2)))):
                             initial[i][j] = rand
                             two = two + 1
-                    # elif two==int((n/2)**2):
-                    #
-                    #     while rand == 2:
-                    #         rand = random.randrange(n) + 1
     
                     if (rand == 3 and (three < int(((n / 2) ** 2) ))):
                             initial[i][j] = rand
                             three = three + 1
     
-                    # elif three==int((n/2)**2):
-                    #     while rand == 3:
-                    #         rand = random.randrange(n) + 1
-    
                     if (rand == 4 and (four < int((n / 2) ** 2 ))):
                             initial[i][j] = rand
                             four = four + 1
-    
-                    # elif four==int((n/2)**2):
-                    #     while rand == 4:
-                    #         rand = random.randrange(n) + 1
-    
-                    #print("i",i,"j",j,initial[i][j])
+
         return initial
     
-    def generate_fourColour_initialise(self, n):
-        rand = random.randint(0,len(self.Level6UniqueB)-1)
-        canonical = self.Level6UniqueB[rand]
+    def generate_fourColour_initialise(self, n, level):
+        if level == 1:
+            rand = random.randint(0,len(self.Level1UniqueB)-1)
+            canonical = self.Level1UniqueB[rand]
+        elif level == 2:
+            rand = random.randint(0,len(self.Level2UniqueB)-1)
+            canonical = self.Level2UniqueB[rand]
+        elif level == 3:
+            rand = random.randint(0,len(self.Level3UniqueB)-1)
+            canonical = self.Level3UniqueB[rand]
+        elif level == 4:
+            rand = random.randint(0,len(self.Level4UniqueB)-1)
+            canonical = self.Level4UniqueB[rand]
+        elif level == 5:
+            rand = random.randint(0,len(self.Level5UniqueB)-1)
+            canonical = self.Level5UniqueB[rand]
+        elif level == 6:
+            rand = random.randint(0,len(self.Level6UniqueB)-1)
+            canonical = self.Level6UniqueB[rand]
         initial = self.CanonicalToGrid(canonical)
- #       if (initial == 2).sum() > 4:
- #           np.place(initial, initial==1, 5)
- #           np.place(initial, initial==2, 1)
- #           np.place(initial, initial==5, 2)
- #       if (initial == 3).sum() > 4:
- #           np.place(initial, initial==1, 5)
- #           np.place(initial, initial==3, 1)
- #           np.place(initial, initial==5, 3)
-#        print(initial)
         return initial
 
 #Convert array of state (grid) into a bitstream
     def convert_to_bit(self, state_array):
-        bits = BitStream(bin='00000000000000000000000000000000')
-        for i in range(0, 16):
+        if self.size == 4:
+            bits = BitStream(bin='00000000000000000000000000000000')
+        elif self.size == 6:
+            bits = BitStream(bin='000000000000000000000000000000000000000000000000000000000000000000000000')
+        elif self.size == 8:
+            bits = BitStream(bin='00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000')
+        for i in range(0, self.size**2):
             if state_array[i] == 1:
                 bits[2 * i] = 0
                 bits[2 * i + 1] = 0
@@ -699,28 +649,30 @@ class WrapslideEnv(gym.Env):
     def move_top_half(self, grid, n):
         # roll top half n blocks: positive n rolls to right negative n rolls left
         gridnew = copy.deepcopy(grid)
-        gridnew[0] = np.roll(gridnew[0], n)
-        gridnew[1] = np.roll(gridnew[1], n)
+        for i in range(int(self.size/2)):
+            gridnew[i] = np.roll(gridnew[i], n)
         return gridnew
     
     def move_bottom_half(self, grid, n):
         gridnew = copy.deepcopy(grid)
-        gridnew[2] = np.roll(gridnew[2], n)
-        gridnew[3] = np.roll(gridnew[3], n)
+        for i in range(int(self.size/2)):
+            gridnew[i+int(self.size/2)] = np.roll(gridnew[i+int(self.size/2)], n)
         return gridnew
     
     def move_left_half(self, grid, n):
         gridtemp = copy.deepcopy(grid)
         gridnew = np.transpose(gridtemp)
-        gridnew[0] = np.roll(gridnew[0], n)
-        gridnew[1] = np.roll(gridnew[1], n)
+        for i in range(int(self.size/2)):
+            gridnew[i] = np.roll(gridnew[i], n)
+        #gridnew[1] = np.roll(gridnew[1], n)
         return np.transpose(gridnew)
     
     def move_right_half(self, grid, n):
         gridtemp = copy.deepcopy(grid)
         gridnew = np.transpose(gridtemp)
-        gridnew[2] = np.roll(gridnew[2], n)
-        gridnew[3] = np.roll(gridnew[3], n)
+        for i in range(int(self.size/2)):
+            gridnew[i+int(self.size/2)] = np.roll(gridnew[i+int(self.size/2)], n)
+        #gridnew[3] = np.roll(gridnew[3], n)
         return np.transpose(gridnew)
     
     
@@ -736,7 +688,7 @@ class WrapslideEnv(gym.Env):
     
     # Isomorph 1 centre translations
     def centre_translations(self, grid):
-        n = 2
+        n = int(self.size/2)
         iso1a = grid
         iso1b = np.roll(grid, n, axis=0)
         iso1c = np.roll(grid, n, axis=1)
@@ -769,8 +721,8 @@ class WrapslideEnv(gym.Env):
         v = 1
         maxcol = 1
     
-        for t in range(0, 4):
-            for v in range(0, 4):
+        for t in range(0, self.size):
+            for v in range(0, self.size):
                 if gridnew[t, v] > maxcol:
                     # print(maxcol)
                     k = gridnew[t, v]
@@ -791,11 +743,17 @@ class WrapslideEnv(gym.Env):
     
     def convert_to_smallestint(self, colours):
         isoints = [0] * 32
+        #print("This is colours\n", colours)
         j = 0
         for j in range(0, 32):
             i = 0
-            bits = BitStream(bin='00000000000000000000000000000000')
-            for i in range(0, 16):
+            if self.size == 4:
+                bits = BitStream(bin='00000000000000000000000000000000')
+            elif self.size == 6:
+                bits = BitStream(bin='000000000000000000000000000000000000000000000000000000000000000000000000')
+            elif self.size == 8:
+                bits = BitStream(bin='00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000')
+            for i in range(0, self.size**2):
                 if colours[j][i] == 1:
                     bits[2 * i] = 0
                     bits[2 * i + 1] = 0
@@ -818,21 +776,12 @@ class WrapslideEnv(gym.Env):
     
     
     def findcanonical(self, grid):
+        
         rotations = self.rotate(grid)
         iso1 = rotations[:, :, 0]
         iso2 = rotations[:, :, 1]
         iso3 = rotations[:, :, 2]
-        iso4 = rotations[:, :, 3]
-    
-        # print("Original")
-        # print(iso1)
-        # print("Rotation 1")
-        # print(iso2)
-        # print("Rotation 2")
-        # print(iso3)
-        # print("Rotation 3")
-        # print(iso4)
-    
+        iso4 = rotations[:, :, 3]  
     
         iso1a = (self.centre_translations(iso1))[:, :, 0]
         iso1b = (self.centre_translations(iso1))[:, :, 1]
@@ -906,24 +855,20 @@ class WrapslideEnv(gym.Env):
             (iso1ai, iso1aii, iso1bi, iso1bii, iso1ci, iso1cii, iso1di, iso1dii, iso2ai, iso2aii, iso2bi, iso2bii, iso2ci,
              iso2cii, iso2di, iso2dii, iso3ai, iso3aii, iso3bi, iso3bii, iso3ci, iso3cii, iso3di, iso3dii, iso4ai, iso4aii,
              iso4bi, iso4bii, iso4ci, iso4cii, iso4di, iso4dii))
-    
-        # maak 'n loop wat toets of al 'n 1 2 3 en 4 teegekom het sodat nie elke keer als doen nie. Andersins gaan 13 keer
-        #  moet hardloop
-    
+        
         colours = self.threeD_to_lists(isomorphs)
     
         canonical = min(self.convert_to_smallestint(colours)) #kan verander dat dit 'n 32 bit string return
     
-        #print(canonical)
         return canonical
     
     def CanonicalToGrid(self, canonical):
-        togrid = bin(canonical)[2:].zfill(32)
-        state = np.zeros((4, 4))
+        togrid = bin(canonical)[2:].zfill(2*(self.size**2))
+        state = np.zeros((self.size, self.size))
         k=0
-        for i in range(0, 4):
+        for i in range(0, self.size):
             j=0
-            for j in range(0, 4):
+            for j in range(0, self.size):
                 if togrid[k * 2:k * 2 + 2] == '00':
                     state[i][j] = 1
                 elif togrid[k * 2:k * 2 + 2] == '01':
