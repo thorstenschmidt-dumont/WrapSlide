@@ -13,29 +13,12 @@ from keras.optimizers import Adam
 import keras.backend as K
 
 from rl.agents.dqn import DQNAgent
-from rl.policy import LinearAnnealedPolicy, BoltzmannQPolicy, EpsGreedyQPolicy, GreedyQTestPolicy
+from rl.policy import LinearAnnealedPolicy, BoltzmannQPolicy, EpsGreedyQPolicy
 from rl.memory import SequentialMemory
 from rl.core import Processor
 from rl.callbacks import FileLogger, ModelIntervalCheckpoint
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--mode', choices=['train', 'test'], default='train')
-parser.add_argument('--env-name', type=str, default='wrapslide-v0')
-parser.add_argument('--weights', type=str, default=None)
-args = parser.parse_args()
-
-# Get the environment and extract the number of actions.
-env = gym.make(args.env_name)
-np.random.seed(123)
-env.seed(123)
-nb_actions = env.action_space.n
-ENV_NAME = 'wrapslide-v0'
-size = int(nb_actions/4+1)
-colours = env.colours
-Neurons = 100
-Layers = 4
-
-INPUT_SHAPE = (size, size)
+INPUT_SHAPE = (4, 4)
 WINDOW_LENGTH = 1
 
 class AtariProcessor(Processor):
@@ -58,6 +41,23 @@ class AtariProcessor(Processor):
     def process_reward(self, reward):
         return np.clip(reward, -1., 1.)
 
+parser = argparse.ArgumentParser()
+parser.add_argument('--mode', choices=['train', 'test'], default='train')
+parser.add_argument('--env-name', type=str, default='wrapslide-v0')
+parser.add_argument('--weights', type=str, default=None)
+args = parser.parse_args()
+
+# Get the environment and extract the number of actions.
+env = gym.make(args.env_name)
+np.random.seed(123)
+env.seed(123)
+nb_actions = env.action_space.n
+ENV_NAME = 'wrapslide-v0'
+size = int(nb_actions/4+1)
+colours = env.colours
+Neurons = 300
+Layers = 3
+
 # Next, we build our model. We use the same model that was described by Mnih et al. (2015).
 input_shape = (WINDOW_LENGTH,) + INPUT_SHAPE
 model = Sequential()
@@ -69,21 +69,17 @@ elif K.common.image_dim_ordering() == 'th':
     model.add(Permute((1, 2, 3), input_shape=input_shape))
 else:
     raise RuntimeError('Unknown image_dim_ordering.')
-model.add(Convolution2D(16, (int(size/2), int(size/2)), strides=(1, 1)))
+model.add(Convolution2D(16, (2, 2), strides=(1, 1)))
 model.add(Activation('relu'))
-#model.add(Convolution2D(16, (1, 1), strides=(1, 1)))
-#model.add(Activation('relu'))
+model.add(Convolution2D(8, (1, 1), strides=(1, 1)))
+model.add(Activation('relu'))
 #model.add(Convolution2D(64, (2, 2), strides=(2, 1)))
 #model.add(Activation('relu'))
 model.add(Flatten())
-model.add(Dense(100))
-model.add(Activation('sigmoid'))
-model.add(Dense(100))
-model.add(Activation('sigmoid'))
-model.add(Dense(100))
-model.add(Activation('sigmoid'))
+#model.add(Dense(100))
+#model.add(Activation('relu'))
 model.add(Dense(nb_actions))
-model.add(Activation('sigmoid'))
+model.add(Activation('linear'))
 print(model.summary())
 
 # Finally, we configure and compile our agent. You can use every built-in Keras optimizer and
@@ -99,14 +95,13 @@ processor = AtariProcessor()
 #policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=1., value_min=.1, value_test=.05,
 #                              nb_steps=1000000)
 policy = EpsGreedyQPolicy()
-test_policy = GreedyQTestPolicy()
 # The trade-off between exploration and exploitation is difficult and an on-going research topic.
 # If you want, you can experiment with the parameters or use a different policy. Another popular one
 # is Boltzmann-style exploration:
 # policy = BoltzmannQPolicy(tau=1.)
 # Feel free to give it a try!
 
-dqn = DQNAgent(model=model, nb_actions=nb_actions, policy=policy, test_policy = test_policy, memory=memory,
+dqn = DQNAgent(model=model, nb_actions=nb_actions, policy=policy, memory=memory,
                processor=processor, nb_steps_warmup=10, gamma=.99, target_model_update=1e-2)#,
                #train_interval=1, delta_clip=1.)
 dqn.compile(Adam(lr=.00025), metrics=['mae'])
@@ -135,18 +130,17 @@ elif args.mode == 'test':
     dqn.load_weights(weights_filename)
     dqn.test(env, nb_episodes=10, visualize=False)
 """
-dqn.load_weights('dqn_{}_weights_{}Col_{}Neurons_{}Layers_{}x_Convnet_Sigmoid.h5f'.format(ENV_NAME,colours,Neurons,Layers,size))
-   
+
 #Now lets learn something
-dqn.fit(env, nb_steps=1000000, visualize=False, verbose=2)
+#dqn.fit(env, nb_steps=1000, visualize=False, verbose=2)
 
 # After training is done, we save the final weights.
-dqn.save_weights('dqn_{}_weights_{}Col_{}Neurons_{}Layers_{}x_Convnet_Sigmoid.h5f'.format(ENV_NAME,colours,Neurons,Layers,size), overwrite=True)
+#dqn.save_weights('dqn_{}_weights_{}Col_{}Neurons_{}Layers_{}x.h5f'.format(ENV_NAME,colours,Neurons,Layers,size), overwrite=True)
 
-"""
+
 for i in range(50):
     print(i)
-    dqn.load_weights('dqn_{}_weights_{}Col_{}Neurons_{}Layers_{}x_Convnet_Sigmoid.h5f'.format(ENV_NAME,colours,Neurons,Layers,size))
+    dqn.load_weights('dqn_{}_weights_{}Col_{}Neurons_{}Layers_{}x.h5f'.format(ENV_NAME,colours,Neurons,Layers,size))
     
     # Okay, now it's time to learn something! We visualize the training here for show, but this
     # slows down training quite a lot. You can always safely abort the training prematurely using
@@ -154,7 +148,7 @@ for i in range(50):
     dqn.fit(env, nb_steps=1000, visualize=False, verbose=2)
     
     # After training is done, we save the final weights.
-    dqn.save_weights('dqn_{}_weights_{}Col_{}Neurons_{}Layers_{}x_Convnet_Sigmoid.h5f'.format(ENV_NAME,colours,Neurons,Layers,size), overwrite=True)
-"""
+    dqn.save_weights('dqn_{}_weights_{}Col_{}Neurons_{}Layers_{}x.h5f'.format(ENV_NAME,colours,Neurons,Layers,size), overwrite=True)
+
 # Finally, evaluate our algorithm for 5 episodes.
 #dqn.test(env, nb_episodes=100, visualize=False)

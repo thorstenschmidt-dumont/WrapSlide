@@ -115,7 +115,7 @@ if args.mode == 'train':
     dqn.save_weights(weights_filename, overwrite=True)
 
     # Finally, evaluate our algorithm for 10 episodes.
-    dqn.test(env, nb_episodes=10, visualize=False)
+    dqn.test(env, nb_episodes=10, visualize=True)
 elif args.mode == 'test':
     weights_filename = 'dqn_{}_weights.h5f'.format(args.env_name)
     if args.weights:

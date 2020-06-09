@@ -18,19 +18,20 @@ env = gym.make(ENV_NAME)
 np.random.seed(123)
 env.seed(123)
 nb_actions = env.action_space.n
-
+input_shape = (16,)
+num_classes = nb_actions
 # Next, we build a very simple model regardless of the dueling architecture
 # if you enable dueling network in DQN , DQN will build a dueling network base on your model automatically
 # Also, you can build a dueling network by yourself and turn off the dueling network in DQN.
 model = Sequential()
-model.add(Flatten(input_shape=(1,) + env.observation_space.shape))
-model.add(Dense(16))
-model.add(Activation('relu'))
-model.add(Dense(16))
-model.add(Activation('relu'))
-model.add(Dense(16))
-model.add(Activation('relu'))
-model.add(Dense(nb_actions, activation='linear'))
+model.add(Flatten(input_shape=(1,) + input_shape))
+model.add(Dense(300))
+model.add(Activation('sigmoid'))
+model.add(Dense(300))
+model.add(Activation('sigmoid'))
+model.add(Dense(300))
+model.add(Activation('sigmoid'))
+model.add(Dense(nb_actions, activation='sigmoid'))
 print(model.summary())
 
 # Finally, we configure and compile our agent. You can use every built-in Keras optimizer and
@@ -43,13 +44,26 @@ dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmu
                enable_dueling_network=True, dueling_type='avg', target_model_update=1e-2, policy=policy)
 dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 
-# Okay, now it's time to learn something! We visualize the training here for show, but this
-# slows down training quite a lot. You can always safely abort the training prematurely using
-# Ctrl + C.
-dqn.fit(env, nb_steps=50000, visualize=False, verbose=2)
+#dqn.load_weights('duel_dqn_wrapslide-v0_weights_4Col_100Neurons.h5f')
+
+#Now lets learn something
+#dqn.fit(env, nb_steps=1000, visualize=False, verbose=2)
 
 # After training is done, we save the final weights.
-dqn.save_weights('duel_dqn_{}_weights.h5f'.format(ENV_NAME), overwrite=True)
+#dqn.save_weights('duel_dqn_{}_weights_4Col_100Neurons.h5f'.format(ENV_NAME), overwrite=True)
+
+
+for i in range(50):
+    print(i)
+    dqn.load_weights('duel_dqn_wrapslide-v0_weights_4Col_100Neurons.h5f')
+    
+    # Okay, now it's time to learn something! We visualize the training here for show, but this
+    # slows down training quite a lot. You can always safely abort the training prematurely using
+    # Ctrl + C.
+    dqn.fit(env, nb_steps=1000, visualize=False, verbose=2)
+    
+    # After training is done, we save the final weights.
+    dqn.save_weights('duel_dqn_{}_weights_4Col_100Neurons.h5f'.format(ENV_NAME), overwrite=True)
 
 # Finally, evaluate our algorithm for 5 episodes.
-dqn.test(env, nb_episodes=5, visualize=False)
+#dqn.test(env, nb_episodes=100, visualize=False)

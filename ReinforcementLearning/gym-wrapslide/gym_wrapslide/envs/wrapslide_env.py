@@ -17,11 +17,12 @@ class WrapslideEnv(gym.Env):
     def __init__(self):
         
         #Define the size of the grid and the number of colours here.
-        self.size = 4
+        self.size = 6
         self.colours = 3
-        self.initialise = True
-        self.level = 2
+        self.initialise = False
+        self.level = 6
         self.test = False
+        self.Convnet = True
         
         high = np.repeat(4, 4*self.size)
         low = np.repeat(0, 4*self.size)
@@ -71,174 +72,175 @@ class WrapslideEnv(gym.Env):
         
         self.doneState = self.findcanonical(solved_state)
         
-        Root = solved_state
-        #Generate the bottom part of the tree
-        print("This is the root \n", Root)
-        # Level 1
-        Level1 = []
-        Level1CanonicalB = []
-        n = self.size
-        for i in range(0,n-1):
-            #if i == 2:
-                #i = 3
-            grid = self.move_top_half(Root,n-1-i)
-            Level1.append(grid)
-            grid = self.move_bottom_half(Root,n-1-i)
-            Level1.append(grid)
-            grid = self.move_left_half(Root,n-1-i)
-            Level1.append(grid)
-            grid = self.move_right_half(Root,n-1-i)
-            Level1.append(grid)
-        
-        for i in range(len(Level1)):
-            Level1CanonicalB.append(self.findcanonical(Level1[i]))
-        
-        Level1CanonicalB = np.array(Level1CanonicalB)
-        Level1CanonicalB = np.unique(Level1CanonicalB)
-        
-        Level1 = []
-        FromBottom = []
-        for i in range(len(Level1CanonicalB)):
-            Level1.append(self.CanonicalToGrid(Level1CanonicalB[i]))
-            FromBottom.append(Level1CanonicalB[i])
+        if self.initialise == True:
+            Root = solved_state
+            #Generate the bottom part of the tree
+            print("This is the root \n", Root)
+            # Level 1
+            Level1 = []
+            Level1CanonicalB = []
+            n = self.size
+            for i in range(0,n-1):
+                #if i == 2:
+                    #i = 3
+                grid = self.move_top_half(Root,n-1-i)
+                Level1.append(grid)
+                grid = self.move_bottom_half(Root,n-1-i)
+                Level1.append(grid)
+                grid = self.move_left_half(Root,n-1-i)
+                Level1.append(grid)
+                grid = self.move_right_half(Root,n-1-i)
+                Level1.append(grid)
             
-        # Level 2
-        Level2 = []
-        Level2Canonical = []
-        for i in range(len(Level1)):
-            for j in range(n-1):
-                #if j == 2:
-                #   j = 3
-                grid = self.move_top_half(Level1[i],n-1-j)
-                Level2.append(grid)
-                grid = self.move_bottom_half(Level1[i],n-1-j)
-                Level2.append(grid)
-                grid = self.move_left_half(Level1[i],n-1-j)
-                Level2.append(grid)
-                grid = self.move_right_half(Level1[i],n-1-j)
-                Level2.append(grid)
+            for i in range(len(Level1)):
+                Level1CanonicalB.append(self.findcanonical(Level1[i]))
             
-        for i in range(len(Level2)):
-            Level2Canonical.append(self.findcanonical(Level2[i]))
-        
-        Level2UniqueB, indecies2 = np.unique(Level2Canonical, return_index = True)
-        Level2 = []
-        for i in range(len(Level2UniqueB)):
-            Level2.append(self.CanonicalToGrid(int(Level2UniqueB[i])))
-            FromBottom.append(Level2UniqueB[i])
+            Level1CanonicalB = np.array(Level1CanonicalB)
+            Level1CanonicalB = np.unique(Level1CanonicalB)
             
-        # Level 3
-        Level3 = []
-        Level3Canonical = []
-        for i in range(len(Level2)):
-            for j in range(n-1):
-                #if j == 2:
-                #   j = 3
-                grid = self.move_top_half(Level2[i],n-1-j)
-                Level3.append(grid)
-                grid = self.move_bottom_half(Level2[i],n-1-j)
-                Level3.append(grid)
-                grid = self.move_left_half(Level2[i],n-1-j)
-                Level3.append(grid)
-                grid = self.move_right_half(Level2[i],n-1-j)
-                Level3.append(grid)
+            Level1 = []
+            FromBottom = []
+            for i in range(len(Level1CanonicalB)):
+                Level1.append(self.CanonicalToGrid(Level1CanonicalB[i]))
+                FromBottom.append(Level1CanonicalB[i])
+            self.Level1UniqueB = Level1CanonicalB
             
-        for i in range(len(Level3)):
-            Level3Canonical.append(self.findcanonical(Level3[i]))
-        
-        Level3UniqueB, indecies3 = np.unique(Level3Canonical, return_index = True)
-        Level3 = []
-        for i in range(len(Level3UniqueB)):
-            Level3.append(self.CanonicalToGrid(int(Level3UniqueB[i])))
-            FromBottom.append(Level3UniqueB[i])
-        
-        
-        # Level 4
-        Level4 = []
-        Level4Canonical = []
-        for i in range(len(Level3)):
-            for j in range(n-1):
-                if j == 2:
-                   j = 3
-                grid = self.move_top_half(Level3[i],n-1-j)
-                Level4.append(grid)
-                grid = self.move_bottom_half(Level3[i],n-1-j)
-                Level4.append(grid)
-                grid = self.move_left_half(Level3[i],n-1-j)
-                Level4.append(grid)
-                grid = self.move_right_half(Level3[i],n-1-j)
-                Level4.append(grid)
+            if self.level > 1:    
+                # Level 2
+                Level2 = []
+                Level2Canonical = []
+                for i in range(len(Level1)):
+                    for j in range(n-1):
+                        #if j == 2:
+                        #   j = 3
+                        grid = self.move_top_half(Level1[i],n-1-j)
+                        Level2.append(grid)
+                        grid = self.move_bottom_half(Level1[i],n-1-j)
+                        Level2.append(grid)
+                        grid = self.move_left_half(Level1[i],n-1-j)
+                        Level2.append(grid)
+                        grid = self.move_right_half(Level1[i],n-1-j)
+                        Level2.append(grid)
+                    
+                for i in range(len(Level2)):
+                    Level2Canonical.append(self.findcanonical(Level2[i]))
+                
+                Level2UniqueB, indecies2 = np.unique(Level2Canonical, return_index = True)
+                Level2 = []
+                for i in range(len(Level2UniqueB)):
+                    Level2.append(self.CanonicalToGrid(int(Level2UniqueB[i])))
+                    FromBottom.append(Level2UniqueB[i])
+                self.Level2UniqueB = Level2UniqueB
             
-        for i in range(len(Level4)):
-            Level4Canonical.append(self.findcanonical(Level4[i]))
-        
-        Level4UniqueB, indecies4 = np.unique(Level4Canonical, return_index = True)
-        Level4 = []
-        for i in range(len(Level4UniqueB)):
-            Level4.append(self.CanonicalToGrid(int(Level4UniqueB[i])))
-            FromBottom.append(Level4UniqueB[i])
-        
-        # Level 5
-        Level5 = []
-        Level5Canonical = []
-        for i in range(len(Level4)):
-            for j in range(n-1):
-                if j == 2:
-                   j = 3
-                grid = self.move_top_half(Level4[i],n-1-j)
-                Level5.append(grid)
-                grid = self.move_bottom_half(Level4[i],n-1-j)
-                Level5.append(grid)
-                grid = self.move_left_half(Level4[i],n-1-j)
-                Level5.append(grid)
-                grid = self.move_right_half(Level4[i],n-1-j)
-                Level5.append(grid)
-        
-        for i in range(len(Level5)):
-            Level5Canonical.append(self.findcanonical(Level5[i]))
-        
-        Level5UniqueB, indecies5 = np.unique(Level5Canonical, return_index = True)
-        Level5 = []
-        for i in range(len(Level5UniqueB)):
-            Level5.append(self.CanonicalToGrid(int(Level5UniqueB[i])))
-            FromBottom.append(Level5UniqueB[i])
+            if self.level > 2:    
+                # Level 3
+                Level3 = []
+                Level3Canonical = []
+                for i in range(len(Level2)):
+                    for j in range(n-1):
+                        #if j == 2:
+                        #   j = 3
+                        grid = self.move_top_half(Level2[i],n-1-j)
+                        Level3.append(grid)
+                        grid = self.move_bottom_half(Level2[i],n-1-j)
+                        Level3.append(grid)
+                        grid = self.move_left_half(Level2[i],n-1-j)
+                        Level3.append(grid)
+                        grid = self.move_right_half(Level2[i],n-1-j)
+                        Level3.append(grid)
+                    
+                for i in range(len(Level3)):
+                    Level3Canonical.append(self.findcanonical(Level3[i]))
+                
+                Level3UniqueB, indecies3 = np.unique(Level3Canonical, return_index = True)
+                Level3 = []
+                for i in range(len(Level3UniqueB)):
+                    Level3.append(self.CanonicalToGrid(int(Level3UniqueB[i])))
+                    FromBottom.append(Level3UniqueB[i])
+                self.Level3UniqueB = Level3UniqueB
+    
             
-        # Level 6
-        Level6 = []
-        Level6Canonical = []
-        for i in range(len(Level5)):
-            for j in range(n-1):
-                if j == 2:
-                   j = 3
-                grid = self.move_top_half(Level5[i],n-1-j)
-                Level6.append(grid)
-                grid = self.move_bottom_half(Level5[i],n-1-j)
-                Level6.append(grid)
-                grid = self.move_left_half(Level5[i],n-1-j)
-                Level6.append(grid)
-                grid = self.move_right_half(Level5[i],n-1-j)
-                Level6.append(grid)
-        
-        for i in range(len(Level6)):
-            Level6Canonical.append(self.findcanonical(Level6[i]))
-        
-        Level6UniqueB, indecies6 = np.unique(Level6Canonical, return_index = True)
-        Level6 = []
-        for i in range(len(Level6UniqueB)):
-            Level6.append(self.CanonicalToGrid(int(Level6UniqueB[i])))
-            FromBottom.append(Level6UniqueB[i])
-        
-        
-        self.Level6UniqueB = Level6UniqueB
-        self.Level5UniqueB = Level5UniqueB
-        self.Level4UniqueB = Level4UniqueB
-        
-        self.Level3UniqueB = Level3UniqueB
-        self.Level2UniqueB = Level2UniqueB
-        self.Level1UniqueB = Level1CanonicalB
-        print("This is level 1\n", self.Level1UniqueB)
-        print("This is level 2\n", self.Level2UniqueB)
-        print("This is level 3\n", self.Level3UniqueB)
+            if self.level > 3:
+                # Level 4
+                Level4 = []
+                Level4Canonical = []
+                for i in range(len(Level3)):
+                    for j in range(n-1):
+                        if j == 2:
+                           j = 3
+                        grid = self.move_top_half(Level3[i],n-1-j)
+                        Level4.append(grid)
+                        grid = self.move_bottom_half(Level3[i],n-1-j)
+                        Level4.append(grid)
+                        grid = self.move_left_half(Level3[i],n-1-j)
+                        Level4.append(grid)
+                        grid = self.move_right_half(Level3[i],n-1-j)
+                        Level4.append(grid)
+                    
+                for i in range(len(Level4)):
+                    Level4Canonical.append(self.findcanonical(Level4[i]))
+                
+                Level4UniqueB, indecies4 = np.unique(Level4Canonical, return_index = True)
+                Level4 = []
+                for i in range(len(Level4UniqueB)):
+                    Level4.append(self.CanonicalToGrid(int(Level4UniqueB[i])))
+                    FromBottom.append(Level4UniqueB[i])
+                self.Level4UniqueB = Level4UniqueB
+            
+            if self.level > 4:
+                # Level 5
+                Level5 = []
+                Level5Canonical = []
+                for i in range(len(Level4)):
+                    for j in range(n-1):
+                        if j == 2:
+                           j = 3
+                        grid = self.move_top_half(Level4[i],n-1-j)
+                        Level5.append(grid)
+                        grid = self.move_bottom_half(Level4[i],n-1-j)
+                        Level5.append(grid)
+                        grid = self.move_left_half(Level4[i],n-1-j)
+                        Level5.append(grid)
+                        grid = self.move_right_half(Level4[i],n-1-j)
+                        Level5.append(grid)
+                
+                for i in range(len(Level5)):
+                    Level5Canonical.append(self.findcanonical(Level5[i]))
+                
+                Level5UniqueB, indecies5 = np.unique(Level5Canonical, return_index = True)
+                Level5 = []
+                for i in range(len(Level5UniqueB)):
+                    Level5.append(self.CanonicalToGrid(int(Level5UniqueB[i])))
+                    FromBottom.append(Level5UniqueB[i])
+                self.Level5UniqueB = Level5UniqueB
+            
+            if self.level > 5:
+                # Level 6
+                Level6 = []
+                Level6Canonical = []
+                for i in range(len(Level5)):
+                    for j in range(n-1):
+                        if j == 2:
+                           j = 3
+                        grid = self.move_top_half(Level5[i],n-1-j)
+                        Level6.append(grid)
+                        grid = self.move_bottom_half(Level5[i],n-1-j)
+                        Level6.append(grid)
+                        grid = self.move_left_half(Level5[i],n-1-j)
+                        Level6.append(grid)
+                        grid = self.move_right_half(Level5[i],n-1-j)
+                        Level6.append(grid)
+                
+                for i in range(len(Level6)):
+                    Level6Canonical.append(self.findcanonical(Level6[i]))
+                
+                Level6UniqueB, indecies6 = np.unique(Level6Canonical, return_index = True)
+                Level6 = []
+                for i in range(len(Level6UniqueB)):
+                    Level6.append(self.CanonicalToGrid(int(Level6UniqueB[i])))
+                    FromBottom.append(Level6UniqueB[i])
+                self.Level6UniqueB = Level6UniqueB
+
    
     def step(self, action):
         '''
@@ -254,8 +256,8 @@ class WrapslideEnv(gym.Env):
         '''
         #self.DIRECTIONS = ['lhu', 'lhd', 'rhu', 'rhd', 'thl', 'thr', 'bhl', 'bhr']
         #print('begin step. State is:')
-        
-        self.state = self.bitstring_to_grid(self.state)
+        if self.Convnet == False:
+            self.state = self.bitstring_to_grid(self.state)
         #print('State after transformed to grid and before step:')
 
         #print('')
@@ -362,8 +364,11 @@ class WrapslideEnv(gym.Env):
         
         bits = self.convert_to_bit(state1)
         self.steps_beyond_done = None
-        
-        self.state = state1
+        # Comment out line below if convnet is used.
+        if self.Convnet == True:
+            self.state = self.state
+        else:
+            self.state = state1
             
         return self.state,  reward, done, {}   
             
@@ -392,8 +397,10 @@ class WrapslideEnv(gym.Env):
         self.steps_beyond_done = None
         self.stateList = []
         #self.state = bits.bin
-        
-        self.state = state1
+        if self.Convnet == True:
+            self.state = state
+        else:
+            self.state = state1
         #self.state = self.state.reshape(4,4)
         #print("This is the start:\n", self.state)
         return self.state

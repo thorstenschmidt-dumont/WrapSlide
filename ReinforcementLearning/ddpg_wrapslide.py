@@ -20,20 +20,31 @@ class MujocoProcessor(WhiteningNormalizerProcessor):
         return np.clip(action, -1., 1.)
 
 
-ENV_NAME = 'HalfCheetah-v2'
-
+#ENV_NAME = 'HalfCheetah-v2'
+ENV_NAME = 'wrapslide-v0'
 
 # Get the environment and extract the number of actions.
 env = gym.make(ENV_NAME)
 env = wrappers.Monitor(env, '/tmp/{}'.format(ENV_NAME), force=True)
 np.random.seed(123)
 env.seed(123)
-assert len(env.action_space.shape) == 1
-nb_actions = env.action_space.shape[0]
+#assert len(env.action_space.shape) == 1
+#nb_actions = env.action_space.shape[0]
+
+np.random.seed(123)
+env.seed(123)
+nb_actions = env.action_space.n
+
+obv = env.reset()
+print(obv)
+print(env.observation_space.shape)
+
+input_shape = (16,)
+num_classes = nb_actions
 
 # Next, we build a very simple model.
 actor = Sequential()
-actor.add(Flatten(input_shape=(1,) + env.observation_space.shape))
+actor.add(Flatten(input_shape=(1,) + input_shape))
 actor.add(Dense(400))
 actor.add(Activation('relu'))
 actor.add(Dense(300))
@@ -65,13 +76,26 @@ agent = DDPGAgent(nb_actions=nb_actions, actor=actor, critic=critic, critic_acti
                   processor=MujocoProcessor())
 agent.compile([Adam(lr=1e-4), Adam(lr=1e-3)], metrics=['mae'])
 
-# Okay, now it's time to learn something! We visualize the training here for show, but this
-# slows down training quite a lot. You can always safely abort the training prematurely using
-# Ctrl + C.
-agent.fit(env, nb_steps=1000000, visualize=False, verbose=1)
+#agent.load_weights('ddpg_wrapslide-v0_weights.h5f')
+
+#Now lets learn something
+agent.fit(env, nb_steps=1000, visualize=False, verbose=2)
 
 # After training is done, we save the final weights.
 agent.save_weights('ddpg_{}_weights.h5f'.format(ENV_NAME), overwrite=True)
 
+
+for i in range(50):
+    print(i)
+    agent.load_weights('ddpg_wrapslide-v0_weights.h5f')
+    
+    # Okay, now it's time to learn something! We visualize the training here for show, but this
+    # slows down training quite a lot. You can always safely abort the training prematurely using
+    # Ctrl + C.
+    agent.fit(env, nb_steps=1000, visualize=False, verbose=2)
+    
+    # After training is done, we save the final weights.
+    agent.save_weights('ddpg_{}_weights.h5f'.format(ENV_NAME), overwrite=True)
+
 # Finally, evaluate our algorithm for 5 episodes.
-agent.test(env, nb_episodes=5, visualize=True, nb_max_episode_steps=200)
+#agent.test(env, nb_episodes=100, visualize=False)
