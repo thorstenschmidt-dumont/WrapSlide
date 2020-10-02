@@ -57,10 +57,10 @@ dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmu
                target_model_update=1e-2, policy=policy, test_policy=test_policy)
 dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 
-dqn.load_weights('dqn_{}_weights_3Col.h5f'.format(ENV_NAME))
+#dqn.load_weights('dqn_{}_weights_3Col.h5f'.format(ENV_NAME))
 
 #Now lets learn something
-#dqn.fit(env, nb_steps=1000000, visualize=False, verbose=2)
+dqn.fit(env, nb_steps=1000, visualize=False, verbose=2)
 
 # After training is done, we save the final weights.
 #dqn.save_weights('dqn_{}_weights_{}Col_{}Neurons_{}Layers_{}x.h5f'.format(ENV_NAME,colours,Neurons,Layers,size), overwrite=True)

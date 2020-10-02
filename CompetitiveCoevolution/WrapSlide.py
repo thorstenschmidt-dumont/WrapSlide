@@ -1,36 +1,30 @@
-#JE KNOLL & T Schmidt-Dumont
-#Wrapslide Environment V0
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Aug  7 11:09:05 2020
 
+@author: thorstens
+"""
 
-import gym
-from gym import error, spaces, utils
-from gym.utils import seeding
 from bitstring import BitStream
 import numpy as np
 import random
 import copy
 import math
- 
-class WrapslideEnv(gym.Env):  
+
+class Wrapslide():  
     #metadata = {'render.modes': ['human']}
     
     def __init__(self):
         
         #Define the size of the grid and the number of colours here.
-        self.size = 6
+        self.size = 4
         self.colours = 3
         self.initialise = True
         self.level = 6
         self.test = False
-        self.Convnet = True
+        self.Convnet = False
         
-        high = np.repeat(4, 4*self.size)
-        low = np.repeat(0, 4*self.size)
-        
-        self.action_space = spaces.Discrete(4*(self.size-1))
-        #self.observation_space = spaces.Box(low,high,dtype=np.float32)
-        self.observation_space = spaces.Box(low=1,high=4, shape=(self.size, self.size,1), dtype=np.uint8)
-        self.seed()
+        self.action_space = (4*(self.size-1))
         self.viewer = None
         self.state = None
         self.steps_beyond_done = None
@@ -75,7 +69,7 @@ class WrapslideEnv(gym.Env):
         if self.initialise == True:
             Root = solved_state
             #Generate the bottom part of the tree
-            print("This is the root \n", Root)
+            # print("This is the root \n", Root)
             # Level 1
             Level1 = []
             Level1CanonicalB = []
@@ -240,127 +234,19 @@ class WrapslideEnv(gym.Env):
                     Level6.append(self.CanonicalToGrid(int(Level6UniqueB[i])))
                     FromBottom.append(Level6UniqueB[i])
                 self.Level6UniqueB = Level6UniqueB
-                
-            if self.level > 6:
-                # Level 7
-                Level7 = []
-                Level7Canonical = []
-                for i in range(len(Level6)):
-                    for j in range(n-1):
-                        if j == 2:
-                           j = 3
-                        grid = self.move_top_half(Level6[i],n-1-j)
-                        Level7.append(grid)
-                        grid = self.move_bottom_half(Level6[i],n-1-j)
-                        Level7.append(grid)
-                        grid = self.move_left_half(Level6[i],n-1-j)
-                        Level7.append(grid)
-                        grid = self.move_right_half(Level6[i],n-1-j)
-                        Level7.append(grid)
-                
-                for i in range(len(Level7)):
-                    Level7Canonical.append(self.findcanonical(Level7[i]))
-                
-                Level7UniqueB, indecies7 = np.unique(Level7Canonical, return_index = True)
-                Level7 = []
-                for i in range(len(Level7UniqueB)):
-                    Level7.append(self.CanonicalToGrid(int(Level7UniqueB[i])))
-                    FromBottom.append(Level7UniqueB[i])
-                self.Level7UniqueB = Level7UniqueB
-            
-            if self.level > 7:
-                # Level 8
-                Level8 = []
-                Level8Canonical = []
-                for i in range(len(Level7)):
-                    for j in range(n-1):
-                        if j == 2:
-                           j = 3
-                        grid = self.move_top_half(Level7[i],n-1-j)
-                        Level8.append(grid)
-                        grid = self.move_bottom_half(Level7[i],n-1-j)
-                        Level8.append(grid)
-                        grid = self.move_left_half(Level7[i],n-1-j)
-                        Level8.append(grid)
-                        grid = self.move_right_half(Level7[i],n-1-j)
-                        Level8.append(grid)
-                
-                for i in range(len(Level8)):
-                    Level8Canonical.append(self.findcanonical(Level8[i]))
-                
-                Level8UniqueB, indecies8 = np.unique(Level8Canonical, return_index = True)
-                Level8 = []
-                for i in range(len(Level8UniqueB)):
-                    Level8.append(self.CanonicalToGrid(int(Level8UniqueB[i])))
-                    FromBottom.append(Level8UniqueB[i])
-                self.Level8UniqueB = Level8UniqueB
-                
-                
-            if self.level > 8:
-                # Level 9
-                Level9 = []
-                Level9Canonical = []
-                for i in range(len(Level8)):
-                    for j in range(n-1):
-                        if j == 2:
-                           j = 3
-                        grid = self.move_top_half(Level8[i],n-1-j)
-                        Level9.append(grid)
-                        grid = self.move_bottom_half(Level8[i],n-1-j)
-                        Level9.append(grid)
-                        grid = self.move_left_half(Level8[i],n-1-j)
-                        Level9.append(grid)
-                        grid = self.move_right_half(Level8[i],n-1-j)
-                        Level9.append(grid)
-                
-                for i in range(len(Level9)):
-                    Level9Canonical.append(self.findcanonical(Level9[i]))
-                
-                Level9UniqueB, indecies9 = np.unique(Level9Canonical, return_index = True)
-                Level9 = []
-                for i in range(len(Level9UniqueB)):
-                    Level9.append(self.CanonicalToGrid(int(Level9UniqueB[i])))
-                    FromBottom.append(Level9UniqueB[i])
-                self.Level9UniqueB = Level9UniqueB
-            
-            if self.level > 9:
-                # Level 10
-                Level10 = []
-                Level10Canonical = []
-                for i in range(len(Level9)):
-                    for j in range(n-1):
-                        if j == 2:
-                           j = 3
-                        grid = self.move_top_half(Level9[i],n-1-j)
-                        Level10.append(grid)
-                        grid = self.move_bottom_half(Level9[i],n-1-j)
-                        Level10.append(grid)
-                        grid = self.move_left_half(Level9[i],n-1-j)
-                        Level10.append(grid)
-                        grid = self.move_right_half(Level9[i],n-1-j)
-                        Level10.append(grid)
-                
-                for i in range(len(Level10)):
-                    Level10Canonical.append(self.findcanonical(Level10[i]))
-                
-                Level10UniqueB, indecies10 = np.unique(Level10Canonical, return_index = True)
-                Level10 = []
-                for i in range(len(Level10UniqueB)):
-                    Level10.append(self.CanonicalToGrid(int(Level10UniqueB[i])))
-                    FromBottom.append(Level10UniqueB[i])
-                self.Level10UniqueB = Level10UniqueB
-        #for i in range(len(self.Level5UniqueB)):
-        #    self.Level6UniqueB = self.Level6UniqueB[self.Level6UniqueB != self.Level5UniqueB[i]]
-        #for i in range(len(self.Level4UniqueB)):
-        #    self.Level5UniqueB = self.Level5UniqueB[self.Level5UniqueB != self.Level4UniqueB[i]]
-        #for i in range(len(self.Level3UniqueB)):
-        #    self.Level4UniqueB = self.Level4UniqueB[self.Level4UniqueB != self.Level3UniqueB[i]]
-        #for i in range(len(self.Level2UniqueB)):
-        #    self.Level3UniqueB = self.Level3UniqueB[self.Level3UniqueB != self.Level2UniqueB[i]]
-        #for i in range(len(self.Level1UniqueB)):
-        #    self.Level2UniqueB = self.Level2UniqueB[self.Level2UniqueB != self.Level1UniqueB[i]]
-        #self.Level1UniqueB = self.Level1UniqueB[self.Level1UniqueB != self.findcanonical(Root)]
-        
+        """
+        for i in range(len(self.Level5UniqueB)):
+            self.Level6UniqueB = self.Level6UniqueB[self.Level6UniqueB != self.Level5UniqueB[i]]
+        for i in range(len(self.Level4UniqueB)):
+            self.Level5UniqueB = self.Level5UniqueB[self.Level5UniqueB != self.Level4UniqueB[i]]
+        for i in range(len(self.Level3UniqueB)):
+            self.Level4UniqueB = self.Level4UniqueB[self.Level4UniqueB != self.Level3UniqueB[i]]
+        for i in range(len(self.Level2UniqueB)):
+            self.Level3UniqueB = self.Level3UniqueB[self.Level3UniqueB != self.Level2UniqueB[i]]
+        for i in range(len(self.Level1UniqueB)):
+            self.Level2UniqueB = self.Level2UniqueB[self.Level2UniqueB != self.Level1UniqueB[i]]
+        self.Level1UniqueB = self.Level1UniqueB[self.Level1UniqueB != self.findcanonical(Root)]
+        """
    
     def step(self, action):
         '''
@@ -382,7 +268,7 @@ class WrapslideEnv(gym.Env):
 
         #print('')
         stateM = self.state.reshape(self.size,self.size)
-        #print(stateM)
+        #print("This is the sate \n",stateM, "\n This is the action: ", action)
         slide = action
         #Only perform this step if testing == true
         if self.test == True:
@@ -460,10 +346,9 @@ class WrapslideEnv(gym.Env):
         
         #Only perform this step if testing == true
         if self.test == True:
-            i = 0
+            i = 1
             while canonical in self.stateList:
                 #print(action.argsort()[-i])
-                #print(i)
                 stateM = self.random_action(action.argsort()[-i])
                 canonical = self.findcanonical(stateM)
                 i = i + 1
@@ -496,10 +381,7 @@ class WrapslideEnv(gym.Env):
    
     def reset(self):
         if self.colours == 2:
-            if self.initialise == False:
-                state = self.generate_two(self.size)
-            else:
-                state = self.generate_twoColour_initialise(self.size, self.level)
+            state = self.generate_two(self.size)
         elif self.colours == 3:
             if self.initialise == False:
                 state = self.generate_threeColour(self.size)
@@ -615,6 +497,8 @@ class WrapslideEnv(gym.Env):
     def generate_two(self, n):
         one=0
         two=0
+    
+    
         initial=np.zeros((n,n))
         for i in range(0,n):
             for j in range(0,n):
@@ -632,35 +516,14 @@ class WrapslideEnv(gym.Env):
                     if (rand == 2 and (two < int(((n/2)**2)))):
                             initial[i][j] = rand
                             two = two + 1
-        return initial
     
-    
-    def generate_twoColour_initialise(self, n, level):
-        if level == 1:
-            rand = random.randint(0,len(self.Level1UniqueB)-1)
-            canonical = self.Level1UniqueB[rand]
-        elif level == 2:
-            rand = random.randint(0,len(self.Level2UniqueB)-1)
-            canonical = self.Level2UniqueB[rand]
-        elif level == 3:
-            rand = random.randint(0,len(self.Level3UniqueB)-1)
-            canonical = self.Level3UniqueB[rand]
-        elif level == 4:
-            rand = random.randint(0,len(self.Level4UniqueB)-1)
-            canonical = self.Level4UniqueB[rand]
-        elif level == 5:
-            rand = random.randint(0,len(self.Level5UniqueB)-1)
-            canonical = self.Level5UniqueB[rand]
-        elif level == 6:
-            rand = random.randint(0,len(self.Level6UniqueB)-1)
-            canonical = self.Level6UniqueB[rand]
-        initial = self.CanonicalToGrid(canonical)
         return initial
     
     def generate_threeColour(self, n):
         one=0
         two=0
         three=0
+    
         initial=np.zeros((n,n))
         for i in range(0,n):
             for j in range(0,n):

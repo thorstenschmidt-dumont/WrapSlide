@@ -107,8 +107,8 @@ test_policy = GreedyQTestPolicy()
 # Feel free to give it a try!
 
 dqn = DQNAgent(model=model, nb_actions=nb_actions, policy=policy, test_policy = test_policy, memory=memory,
-               processor=processor, nb_steps_warmup=10, gamma=.99, target_model_update=1e-2)#,
-               #train_interval=1, delta_clip=1.)
+               processor=processor, nb_steps_warmup=10, gamma=.99, target_model_update=1e-2)
+               
 dqn.compile(Adam(lr=.00025), metrics=['mae'])
 
 
@@ -135,13 +135,13 @@ elif args.mode == 'test':
     dqn.load_weights(weights_filename)
     dqn.test(env, nb_episodes=10, visualize=False)
 """
-dqn.load_weights('dqn_{}_weights_{}Col_{}Neurons_{}Layers_{}x_Convnet_Sigmoid.h5f'.format(ENV_NAME,colours,Neurons,Layers,size))
+#dqn.load_weights('dqn_{}_weights_{}Col_{}Neurons_{}Layers_{}x_Convnet_Sigmoid.h5f'.format(ENV_NAME,colours,Neurons,Layers,size))
    
 #Now lets learn something
-dqn.fit(env, nb_steps=1000000, visualize=False, verbose=2)
+dqn.fit(env, nb_steps=10000, visualize=False, verbose=2)
 
 # After training is done, we save the final weights.
-dqn.save_weights('dqn_{}_weights_{}Col_{}Neurons_{}Layers_{}x_Convnet_Sigmoid.h5f'.format(ENV_NAME,colours,Neurons,Layers,size), overwrite=True)
+#sdqn.save_weights('dqn_{}_weights_{}Col_{}Neurons_{}Layers_{}x_Convnet_Sigmoid.h5f'.format(ENV_NAME,colours,Neurons,Layers,size), overwrite=True)
 
 """
 for i in range(50):

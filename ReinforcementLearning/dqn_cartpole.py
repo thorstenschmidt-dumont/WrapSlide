@@ -10,7 +10,7 @@ from rl.policy import BoltzmannQPolicy
 from rl.memory import SequentialMemory
 
 
-ENV_NAME = 'BreakoutDeterministic-v4'
+ENV_NAME = 'CartPole-v0'
 
 
 # Get the environment and extract the number of actions.
