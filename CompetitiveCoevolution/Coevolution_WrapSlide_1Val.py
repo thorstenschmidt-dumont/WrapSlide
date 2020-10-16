@@ -154,15 +154,16 @@ def Objective(Swarm, weights, bias, n_input, n_output, n_hidden):
         ObjValue[j] = np.mean(Results[j, :])
     return ObjValue
 
-
 def PlayGame(ffsn, state_in):
-    MaxSteps = 20
+    MaxSteps = Game.level*2
     steps = 0
     done = False
     values = np.zeros(4*(Game.size-1))
     state = state_in
     statelist = []
-    statelist.append(state)
+    stateM = state.reshape(size,size)
+    canonical = Game.findcanonical(stateM)
+    statelist.append(canonical)
     while done == False and steps < MaxSteps:
         for i in range(actions):
             Game.state = state
@@ -174,18 +175,20 @@ def PlayGame(ffsn, state_in):
         action = np.argmax(values)
         Game.state = state
         step = Game.step(action)
-        j = 0
-        while step[0] in statelist:
-            action = action.argsort()[-j]
+        k = 0
+        canonical = Game.findcanonical(step[0].reshape(size,size))
+        while canonical in statelist and k < 4*(size-1):
+            action = values.argsort()[-k]
             Game.state = state
             step = Game.step(action)
-            j += 1
+            canonical = Game.findcanonical(step[0].reshape(size,size))
+            k += 1
+        if k == 4*(size-1):
+            step = Game.step(np.argmax(values))
         steps += 1
         done = step[2]
         state = step[0]
-        statelist.append(state)
-    if steps == 20:
-        print(statelist)
+        statelist.append(canonical)
     return (MaxSteps - steps)
 
 
@@ -201,9 +204,11 @@ def PSO(n_input, n_output, n_hidden, first, Swarm, SwarmSize):
     size = 0
     weights = 0
     bias = 0
-    normal = False
+    normal = True
     normalised = False
-    component = True
+    component = False
+    quantum = False
+    QuantumParticles = SwarmSize/2
     slope = 0.025
     for i in range(len(architecture)-1):
         weights = weights + architecture[i]*architecture[i+1]
@@ -259,7 +264,7 @@ def PSO(n_input, n_output, n_hidden, first, Swarm, SwarmSize):
                 if np.linalg.norm(Velocity[i, :]) > Vmax:
                     Velocity[i, :] = (Vmax/np.linalg.norm(Velocity[i, :]))*Velocity[i, :]    
             if component == True:
-                 # Componenet-wise velocity clamping
+                 # Component-wise velocity clamping
                 for j in range(size):
                     r1 = np.random.random()
                     r2 = np.random.random()
@@ -271,6 +276,8 @@ def PSO(n_input, n_output, n_hidden, first, Swarm, SwarmSize):
                         Velocity[i, j] = -Vmax
                     else:
                         Velocity[i, j] = w*Velocity[i, j] + c1*r1*(PBest[i, j]-SwarmValue[i, j]) + c2*r2*(GBest[j]-SwarmValue[i, j])
+            if quantum == True and i < QuantumParticles:
+                Velocity[i, :] = np.random.normal(0,0.38822,size)     
          
         # Move particles
         for i in range(SwarmSize):
@@ -395,18 +402,21 @@ for i in range(5):
     ffsn_multi.W = Wupdated
     ffsn_multi.B = Bupdated
     
-    Game.level = 2
+    #Game.level = 3
+    #Game.initialise = False
     # Let's play
     print("Let's play")
     Games = np.zeros(100)
     for j in range(100):
         state = Game.reset()
         statelist = []
-        statelist.append(state)
-        #print(state)
+        stateM = state.reshape(size,size)
+        canonical = Game.findcanonical(stateM)
+        statelist.append(canonical)
+        #print(state.reshape(size,size))
         done = False
         steps = 0
-        while done == False and steps < 10:
+        while done == False and steps < 100:
             x_val = state.reshape((1, size**2))
             for i in range(actions):
                 Game.state = state
@@ -419,19 +429,19 @@ for i in range(5):
             Game.state = state
             step = Game.step(action)
             k = 0
-            ids = map(id, statelist)
-            while id(step[0]) in ids:
-                action = action.argsort()[-k]
-                print("Action ", action, k)
+            canonical = Game.findcanonical(step[0].reshape(size,size))
+            while canonical in statelist and k < 4*(size-1):
+                action = values.argsort()[-k]
+                #print("Action ", action, k)
                 Game.state = state
                 step = Game.step(action)
+                canonical = Game.findcanonical(step[0].reshape(size,size))
                 k += 1
+            if k == 4*(size-1):
+                step = Game.step(np.argmax(values))    
             steps += 1
             done = step[2]
             state = step[0]
-            statelist.append(state)
+            statelist.append(canonical)
         Games[j] = steps
-        if steps == 10:
-            print(statelist)
-            break
         print("Iteration ", j, " solved in ", steps)

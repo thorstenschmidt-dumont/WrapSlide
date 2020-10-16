@@ -234,7 +234,7 @@ class Wrapslide():
                     Level6.append(self.CanonicalToGrid(int(Level6UniqueB[i])))
                     FromBottom.append(Level6UniqueB[i])
                 self.Level6UniqueB = Level6UniqueB
-        """
+        
         for i in range(len(self.Level5UniqueB)):
             self.Level6UniqueB = self.Level6UniqueB[self.Level6UniqueB != self.Level5UniqueB[i]]
         for i in range(len(self.Level4UniqueB)):
@@ -246,7 +246,7 @@ class Wrapslide():
         for i in range(len(self.Level1UniqueB)):
             self.Level2UniqueB = self.Level2UniqueB[self.Level2UniqueB != self.Level1UniqueB[i]]
         self.Level1UniqueB = self.Level1UniqueB[self.Level1UniqueB != self.findcanonical(Root)]
-        """
+        
    
     def step(self, action):
         '''
@@ -376,7 +376,7 @@ class Wrapslide():
         else:
             self.state = state1
             
-        return self.state,  reward, done, {}   
+        return self.state,  reward, done, canonical, {}   
             
    
     def reset(self):
