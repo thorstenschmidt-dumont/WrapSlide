@@ -9,6 +9,9 @@ from FFSNeuralNetwork import FFSNNetwork
 from WrapSlide import Wrapslide
 import numpy as np
 import random
+import multiprocessing as mp
+from multiprocessing import Pool, cpu_count
+import os
 
 # Define my functions
 def Convert(lst, W):
@@ -147,15 +150,16 @@ def Objective(Swarm, weights, bias, n_input, n_output, n_hidden):
             Bupdated = bias2dict(NNbias, n_hidden)
             # Update the values within the neural network
             ffsn_multi.W = Wupdated
-            ffsn_multi.B = Bupdated
+            ffsn_multi.B = Bupdated     
             # Perform the prediction on the train set
             Results[i, j] = PlayGame(ffsn_multi, state)
     for j in range(len(Swarm)):
         ObjValue[j] = np.mean(Results[j, :])
     return ObjValue
 
+
 def PlayGame(ffsn, state_in):
-    MaxSteps = Game.level*2
+    MaxSteps = Game.level*multiplier
     steps = 0
     done = False
     values = np.zeros(4*(Game.size-1))
@@ -204,11 +208,11 @@ def PSO(n_input, n_output, n_hidden, first, Swarm, SwarmSize):
     size = 0
     weights = 0
     bias = 0
-    normal = True
+    normal = False
     normalised = False
-    component = False
+    component = True
     quantum = False
-    QuantumParticles = SwarmSize/2
+    QuantumParticles = int(np.round(SwarmSize/3))
     slope = 0.025
     for i in range(len(architecture)-1):
         weights = weights + architecture[i]*architecture[i+1]
@@ -231,7 +235,7 @@ def PSO(n_input, n_output, n_hidden, first, Swarm, SwarmSize):
     MeanVelocity = []
     iterations = 0
     Tracker = 0
-    while iterations <= MaxIterations and Tracker <= 50:
+    while iterations <= MaxIterations and Tracker <= 5:
         iterations += 1
         Tracker += 1
         Vmax = 0.75#1/(1 + np.exp(-slope*(iterations - (MaxIterations/2))))
@@ -316,9 +320,12 @@ done = False
 steps = 0
 n_input = size**2
 n_output = 1
-n_hidden = [20]
+n_hidden = [20,20]
 SwarmSize = 20
 Game.level = 1
+pool = Pool(cpu_count())
+method = "Component"
+multiplier = 2
 
 # Generate the NN and its associated structure
 ffsn_multi = FFSNNetwork(n_input, n_hidden)
@@ -344,7 +351,9 @@ Swarm = np.zeros((SwarmSize,(len(weights)+len(bias))))
 OptimalNetwork, PBest = PSO(n_input, n_output, n_hidden, first, Swarm, SwarmSize)
 Swarm = PBest[:,0:(len(weights)+len(bias))]
 print(Swarm)
-    
+
+np.savetxt("swarms/swarm_{}multiplier_{}hidden_{}_method.csv".format(multiplier,n_hidden,method), Swarm, delimiter=",")
+
 # Break up the GBest particle into weight and bias components
 weights = OptimalNetwork[0:len(weights)]
 bias = OptimalNetwork[len(weights):len(particle)]
@@ -354,6 +363,8 @@ Bupdated = bias2dict(bias, n_hidden)
     
 ffsn_multi.W = Wupdated
 ffsn_multi.B = Bupdated
+
+np.savetxt("swarms/swarm_{}multiplier_{}hidden_{}_method.csv".format(multiplier,n_hidden,method), Swarm, delimiter=",")
 
 # Let's play
 print("Let's play")
@@ -391,7 +402,8 @@ for i in range(5):
     OptimalNetwork, PBest = PSO(n_input, n_output, n_hidden, first, Swarm, SwarmSize)
     Swarm = PBest[:, 0:(len(weights)+len(bias))]
     print(Swarm)
-    
+
+    np.savetxt("swarms/swarm_{}multiplier_{}hidden_{}_method.csv".format(multiplier,n_hidden,method),Swarm, delimiter=",")
     # Break up the GBest particle into weight and bias components
     weights = OptimalNetwork[0:len(weights)]
     bias = OptimalNetwork[len(weights):len(particle)]
@@ -402,8 +414,6 @@ for i in range(5):
     ffsn_multi.W = Wupdated
     ffsn_multi.B = Bupdated
     
-    #Game.level = 3
-    #Game.initialise = False
     # Let's play
     print("Let's play")
     Games = np.zeros(100)
@@ -445,3 +455,48 @@ for i in range(5):
             statelist.append(canonical)
         Games[j] = steps
         print("Iteration ", j, " solved in ", steps)
+
+
+
+Game.initialise = False
+# Let's play
+print("Let's play")
+Games = np.zeros(100)
+for j in range(100):
+    state = Game.reset()
+    statelist = []
+    stateM = state.reshape(size,size)
+    canonical = Game.findcanonical(stateM)
+    statelist.append(canonical)
+    #print(state.reshape(size,size))
+    done = False
+    steps = 0
+    while done == False and steps < 1000:
+        x_val = state.reshape((1, size**2))
+        for i in range(actions):
+            Game.state = state
+            step = Game.step(i)
+            done = step[2]
+            stateNew = step[0]
+            x_val = stateNew.reshape((1, size**2))
+            values[i] = ffsn_multi.predict(x_val)
+        action = np.argmax(values)
+        Game.state = state
+        step = Game.step(action)
+        k = 0
+        canonical = Game.findcanonical(step[0].reshape(size,size))
+        while canonical in statelist and k < 4*(size-1):
+            action = values.argsort()[-k]
+            #print("Action ", action, k)
+            Game.state = state
+            step = Game.step(action)
+            canonical = Game.findcanonical(step[0].reshape(size,size))
+            k += 1
+        if k == 4*(size-1):
+            step = Game.step(np.argmax(values))    
+        steps += 1
+        done = step[2]
+        state = step[0]
+        statelist.append(canonical)
+    Games[j] = steps
+    print("Iteration ", j, " solved in ", steps)

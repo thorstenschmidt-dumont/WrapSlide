@@ -236,15 +236,15 @@ class Wrapslide():
                 self.Level6UniqueB = Level6UniqueB
         
         for i in range(len(self.Level5UniqueB)):
-            self.Level6UniqueB = self.Level6UniqueB[self.Level6UniqueB != self.Level5UniqueB[i]]
+            self.Level6UniqueB = self.Level6UniqueB[self.Level6UniqueB != self.findcanonical(Root)]
         for i in range(len(self.Level4UniqueB)):
-            self.Level5UniqueB = self.Level5UniqueB[self.Level5UniqueB != self.Level4UniqueB[i]]
+            self.Level5UniqueB = self.Level5UniqueB[self.Level5UniqueB != self.findcanonical(Root)]
         for i in range(len(self.Level3UniqueB)):
-            self.Level4UniqueB = self.Level4UniqueB[self.Level4UniqueB != self.Level3UniqueB[i]]
+            self.Level4UniqueB = self.Level4UniqueB[self.Level4UniqueB != self.findcanonical(Root)]
         for i in range(len(self.Level2UniqueB)):
-            self.Level3UniqueB = self.Level3UniqueB[self.Level3UniqueB != self.Level2UniqueB[i]]
+            self.Level3UniqueB = self.Level3UniqueB[self.Level3UniqueB != self.findcanonical(Root)]
         for i in range(len(self.Level1UniqueB)):
-            self.Level2UniqueB = self.Level2UniqueB[self.Level2UniqueB != self.Level1UniqueB[i]]
+            self.Level2UniqueB = self.Level2UniqueB[self.Level2UniqueB != self.findcanonical(Root)]
         self.Level1UniqueB = self.Level1UniqueB[self.Level1UniqueB != self.findcanonical(Root)]
         
    
