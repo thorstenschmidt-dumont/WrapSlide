@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Aug 18 07:57:13 2020
+Created on Thu Dec 17 13:25:24 2020
 
 @author: thorstens
 """
-
 from FFSNeuralNetwork import FFSNNetwork
-from WrapSlide import Wrapslide
+from MultiClassNetwork import FFSN_MultiClass
 import numpy as np
+from sklearn.metrics import accuracy_score, log_loss
+import matplotlib.pyplot as plt
+import operator
+from WrapSlide import Wrapslide
 import random
-#import multiprocessing as mp
-#from multiprocessing import Pool, cpu_count
-import os
 
 # Define my functions
 def Convert(lst, W):
@@ -68,10 +68,10 @@ def bias2dict(V, n_hidden):
     dictionary = Convert(lst, W)
     return dictionary
 
-def GenerateSwarm(SwarmSize, n_input, n_output, n_hidden):
-    for i in range(SwarmSize):
+def GeneratePopulation(size, n_input, n_output, n_hidden):
+    for i in range(size):
         # Initialise a new random neural network
-        ffsn_multi = FFSNNetwork(n_input, n_hidden)
+        ffsn_multi = FFSN_MultiClass(n_input, n_output, n_hidden)
         # Recover the weights and bias from the random network
         W = ffsn_multi.W
         B = ffsn_multi.B
@@ -79,15 +79,15 @@ def GenerateSwarm(SwarmSize, n_input, n_output, n_hidden):
         weights = dict2weights(W)
         bias = dict2weights(B)
         # Concatenate the weight vectors into a particle
-        particle = np.concatenate((weights, bias))
+        chromosome = np.concatenate((weights, bias))
         # Combine the particles into a swarm
         if i == 0:
-            Swarm = particle
+            Population = chromosome
         else:
-            Swarm = np.concatenate((Swarm,particle))
+            Population = np.concatenate((Population,chromosome))
     # Reshape the swarm to the right output format
-    Swarm = Swarm.reshape((SwarmSize,(len(weights)+len(bias))))
-    return Swarm
+    Population = Population.reshape((size,(len(weights)+len(bias))))
+    return Population
 
 
 def EvaluateObjective(Swarm, weights, bias, n_input, n_output, n_hidden):
@@ -195,120 +195,81 @@ def PlayGame(ffsn, state_in):
         statelist.append(canonical)
     return (MaxSteps - steps)
 
-
-def PSO(n_input, n_output, n_hidden, first, Swarm, SwarmSize):
-    """Execute the Particle Swarm Optimisation algorithm"""
-    # Initialisation
-    w = 0.7     # inertia weight
-    c1 = 1.4
-    c2 = 1.4
-    rho = 1
-    Vmax = 0.25
-    architecture = np.concatenate(([n_input], n_hidden, [1]))
-    size = 0
+def GeneticAlgorithm(n_input, n_output, n_hidden, first, previous, PopSize):
+    mutation_gene_percentage = 0.2
+    crossover_percentage = 0.75
+    elitist_percentage = 0.2
+    length = 0
     weights = 0
     bias = 0
-    normal = True
-    normalised = False
-    component = False
-    quantum = False
-    QuantumParticles = int(np.round(SwarmSize/3))
-    slope = 0.025
+    architecture = np.concatenate(([n_input], n_hidden, [n_output]))
     for i in range(len(architecture)-1):
         weights = weights + architecture[i]*architecture[i+1]
         bias = bias + architecture[i+1]
-    size = weights + bias
-    Velocity = np.zeros((SwarmSize, size))
-    MaxIterations = 500
+    length = weights + bias
+    Generations = 500
     if first == True:
-        Swarm = GenerateSwarm(SwarmSize, n_input, n_output, n_hidden)
-    GBest = np.zeros(size+1)
-    PBest = np.zeros((SwarmSize, size+1))
-    ObjValue = Objective(Swarm, weights, bias, n_input, n_output, n_hidden)
-    #print(ObjValue)
-    PBest = np.column_stack([Swarm, ObjValue])
-    SwarmValue = np.column_stack([Swarm, ObjValue])
-    
-    for i in range(size):
-        GBest[i] = Swarm[0, i]
-
-    MeanVelocity = []
+        Population = GeneratePopulation(PopSize, n_input, n_output, n_hidden)
+        NewGeneration = Population
+    else:
+        Population = previous
+        NewGeneration = previous
+    Fitness = Objective(Population, weights, bias, n_input, n_output, n_hidden)
+    Best = Population[Fitness.argsort()[-(i + 1)],:]
+    MaxFitness = max(Fitness)
+    print(Fitness)
     iterations = 0
-    Tracker = 0
-    while iterations <= MaxIterations and Tracker <= 50:
-        iterations += 1
-        Tracker += 1
-        Vmax = 0.75#1/(1 + np.exp(-slope*(iterations - (MaxIterations/2))))
-        print("Search iterations: ", iterations)
-        # Determine GBest
-        for i in range(SwarmSize):
-            if PBest[i, size] > GBest[size]:
-                for j in range(size+1):
-                    GBest[j] = PBest[i, j]
+    Tracker = 50
+    NoChange = 0
+    CumSelectionProb = np.zeros(PopSize)
+    MaxFitness = max(Fitness)
+    while iterations < Generations and NoChange < Tracker:
+        Fitness_Sum = np.sum(Fitness)
+        if Fitness_Sum == 0:
+            SelectionProb = np.ones(PopSize)/PopSize
+        else:
+            SelectionProb = Fitness/Fitness_Sum
+        for i in range(PopSize):
+            if i == 0:
+                CumSelectionProb[i] = SelectionProb[i]
+            else:
+                CumSelectionProb[i] = CumSelectionProb[i-1] + SelectionProb[i]
         
-        for i in range(SwarmSize):
-            if normal == True:
-                # No velocity clamping
-                for j in range(size):
-                    r1 = np.random.random()
-                    r2 = np.random.random()
-                    if SwarmValue[i, size] == GBest[size]:
-                        Velocity[i, j] = rho*(np.random.random()*0.01-0.005)
-                    else:
-                        Velocity[i, j] = w*Velocity[i, j] + c1*r1*(PBest[i, j]-SwarmValue[i, j]) + c2*r2*(GBest[j]-SwarmValue[i, j])
-            if normalised == True:
-                # Nomalised velocity clamping
-                for j in range(size):
-                    r1 = np.random.random()
-                    r2 = np.random.random()
-                    if SwarmValue[i, size] == GBest[size]:
-                        Velocity[i, j] = rho*(np.random.random()*0.01-0.005)
-                    else:
-                        Velocity[i, j] = w*Velocity[i, j] + c1*r1*(PBest[i, j]-SwarmValue[i, j]) + c2*r2*(GBest[j]-SwarmValue[i, j])
-                if np.linalg.norm(Velocity[i, :]) > Vmax:
-                    Velocity[i, :] = (Vmax/np.linalg.norm(Velocity[i, :]))*Velocity[i, :]    
-            if component == True:
-                 # Component-wise velocity clamping
-                for j in range(size):
-                    r1 = np.random.random()
-                    r2 = np.random.random()
-                    if SwarmValue[i, size] == GBest[size]:
-                        Velocity[i, j] = rho*(np.random.random()*0.01-0.005)
-                    elif w*Velocity[i, j] + c1*r1*(PBest[i, j]-SwarmValue[i, j]) + c2*r2*(GBest[j]-SwarmValue[i, j]) > Vmax:
-                        Velocity[i, j] = Vmax
-                    elif w*Velocity[i, j] + c1*r1*(PBest[i, j]-SwarmValue[i, j]) + c2*r2*(GBest[j]-SwarmValue[i, j]) < -Vmax:
-                        Velocity[i, j] = -Vmax
-                    else:
-                        Velocity[i, j] = w*Velocity[i, j] + c1*r1*(PBest[i, j]-SwarmValue[i, j]) + c2*r2*(GBest[j]-SwarmValue[i, j])
-            if quantum == True and i < QuantumParticles:
-                Velocity[i, :] = np.random.normal(0,0.38822,size)     
-         
-        # Move particles
-        for i in range(SwarmSize):
-            for j in range(size):
-                Swarm[i, j] = Velocity[i, j] + Swarm[i, j]
-
-        # Determine new objective value
-        ObjValue = Objective(Swarm, weights, bias, n_input, n_output, n_hidden)
-        print(ObjValue)
-        SwarmValue = np.column_stack([Swarm, ObjValue])
-        # Determine PBest
-        for i in range(SwarmSize):
-            if PBest[i, size] < SwarmValue[i, size]:
-                PBest[i, :] = SwarmValue[i, :]
-
-        # Determine GBest
-        for i in range(SwarmSize):
-            if PBest[i, size] > GBest[size]:
-                for j in range(size+1):
-                    GBest[j] = PBest[i, j]
-                    Tracker = 0
-        MeanVelocity.append(np.mean(np.absolute(Velocity)))
-    MeanVelocity = np.array(MeanVelocity)
-    # MeanVel = np.mean(MeanVelocity)
-    return GBest, PBest
-
-##############################################################################
+        # Perform elitism
+        Counter = 0
+        for i in range(int(elitist_percentage*PopSize)):
+            NewGeneration[i, :] = Population[Fitness.argsort()[-(i + 1)],:]
+            Counter += 1
+        # Perform crossover
+        for i in range(int(crossover_percentage*PopSize)):
+            r1 = np.random.random()
+            r2 = np.random.random()
+            Parent1 = Population[np.searchsorted(CumSelectionProb,r1,side = 'left'), :]
+            Parent2 = Population[np.searchsorted(CumSelectionProb,r2,side = 'left'), :]
+            CrossOverpoint = np.random.randint(low = 0, high = length)
+            NewGeneration[Counter,0:CrossOverpoint] = Parent1[0:CrossOverpoint]
+            NewGeneration[Counter,CrossOverpoint:length] = Parent2[CrossOverpoint:length]
+            Counter += 1
+        # Perform mutation
+        for i in range(int(PopSize-Counter)):
+            mutated_values = np.random.randn(int(mutation_gene_percentage*length))
+            mutated_chromosomes = np.random.randint(0,length, int(mutation_gene_percentage*length))
+            r1 = np.random.random()
+            NewGeneration[Counter, :] = Population[np.searchsorted(CumSelectionProb,r1,side = 'left'), :]
+            for j in range(int(mutation_gene_percentage*length)):
+                NewGeneration[Counter, mutated_chromosomes[j]] = mutated_values[j]
+            Counter += 1
+        Population = NewGeneration
+        Fitness = Objective(Population, weights, bias, n_input, n_output, n_hidden)
+        print(Fitness)
+        if max(Fitness) > MaxFitness:
+            MaxFitness = max(Fitness)
+            Best = Population[Fitness.argsort()[-(i + 1)],:]
+            NoChange = 0
+        else:
+            NoChange += 1
+        iterations += 1
+    return Fitness, Population, Best    
 
 # hidden sizes = [layer 1 size, layer 2 size, etc]
 Game = Wrapslide()
@@ -320,11 +281,10 @@ done = False
 steps = 0
 n_input = size**2
 n_output = 1
-n_hidden = [20,20]
-SwarmSize = 20
+n_hidden = [20]
+PopSize = 20
 Game.level = 1
 #pool = Pool(cpu_count())
-method = "NoClamp"
 multiplier = 5
 
 # Generate the NN and its associated structure
@@ -347,12 +307,14 @@ bias = particle[len(weights):len(particle)]
 
 first = True
 
-Swarm = np.zeros((SwarmSize,(len(weights)+len(bias))))
-OptimalNetwork, PBest = PSO(n_input, n_output, n_hidden, first, Swarm, SwarmSize)
-Swarm = PBest[:,0:(len(weights)+len(bias))]
-print(Swarm)
+first = True
 
-np.savetxt("swarms/swarm_{}multiplier_{}hidden_{}_method_{}Level.csv".format(multiplier,n_hidden,method,Game.level), Swarm, delimiter=",")
+previous = np.zeros((PopSize,(len(weights)+len(bias))))
+Fitness, Population, OptimalNetwork = GeneticAlgorithm(n_input, n_output, n_hidden, first, previous, PopSize)
+#OptimalNetwork = Population[Fitness.argsort()[-1],:]
+print(Population)
+
+np.savetxt("populations/population_{}multiplier_{}hidden_{}Level.csv".format(multiplier,n_hidden,Game.level), Population, delimiter=",")
 
 # Break up the GBest particle into weight and bias components
 weights = OptimalNetwork[0:len(weights)]
@@ -364,7 +326,7 @@ Bupdated = bias2dict(bias, n_hidden)
 ffsn_multi.W = Wupdated
 ffsn_multi.B = Bupdated
 
-np.savetxt("swarms/swarm_{}multiplier_{}hidden_{}_method_{}Level.csv".format(multiplier,n_hidden,method, Game.level), Swarm, delimiter=",")
+np.savetxt("populations/population_{}multiplier_{}hidden_{}Level.csv".format(multiplier,n_hidden,Game.level), Population, delimiter=",")
 
 # Let's play
 print("Let's play")
@@ -398,12 +360,12 @@ first = False
 for i in range(5):
     Game.level = i + 2
     # Let the optimisation begin
-    print(Swarm)
-    OptimalNetwork, PBest = PSO(n_input, n_output, n_hidden, first, Swarm, SwarmSize)
-    Swarm = PBest[:, 0:(len(weights)+len(bias))]
-    print(Swarm)
+    print(Population)
+    Fitness, Population, OptimalNetwork = GeneticAlgorithm(n_input, n_output, n_hidden, first, previous, PopSize)
+    #OptimalNetwork = Population[Fitness.argsort()[-1],:]
+    print(Population)
 
-    np.savetxt("swarms/swarm_{}multiplier_{}hidden_{}_method_{}Level.csv".format(multiplier,n_hidden,method, Game.level),Swarm, delimiter=",")
+    np.savetxt("populations/population_{}multiplier_{}hidden_{}Level.csv".format(multiplier,n_hidden,Game.level), Population, delimiter=",")
     # Break up the GBest particle into weight and bias components
     weights = OptimalNetwork[0:len(weights)]
     bias = OptimalNetwork[len(weights):len(particle)]

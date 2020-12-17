@@ -236,15 +236,15 @@ class Wrapslide():
                 self.Level6UniqueB = Level6UniqueB
         
         for i in range(len(self.Level5UniqueB)):
-            self.Level6UniqueB = self.Level6UniqueB[self.Level6UniqueB != self.findcanonical(Root)]
+            self.Level6UniqueB = self.Level6UniqueB[self.Level6UniqueB != self.Level5UniqueB[i]]
         for i in range(len(self.Level4UniqueB)):
-            self.Level5UniqueB = self.Level5UniqueB[self.Level5UniqueB != self.findcanonical(Root)]
+            self.Level5UniqueB = self.Level5UniqueB[self.Level5UniqueB != self.Level4UniqueB[i]]
         for i in range(len(self.Level3UniqueB)):
-            self.Level4UniqueB = self.Level4UniqueB[self.Level4UniqueB != self.findcanonical(Root)]
+            self.Level4UniqueB = self.Level4UniqueB[self.Level4UniqueB != self.Level3UniqueB[i]]
         for i in range(len(self.Level2UniqueB)):
-            self.Level3UniqueB = self.Level3UniqueB[self.Level3UniqueB != self.findcanonical(Root)]
+            self.Level3UniqueB = self.Level3UniqueB[self.Level3UniqueB != self.Level2UniqueB[i]]
         for i in range(len(self.Level1UniqueB)):
-            self.Level2UniqueB = self.Level2UniqueB[self.Level2UniqueB != self.findcanonical(Root)]
+            self.Level2UniqueB = self.Level2UniqueB[self.Level2UniqueB != self.Level1UniqueB[i]]
         self.Level1UniqueB = self.Level1UniqueB[self.Level1UniqueB != self.findcanonical(Root)]
         
    
@@ -381,7 +381,10 @@ class Wrapslide():
    
     def reset(self):
         if self.colours == 2:
-            state = self.generate_two(self.size)
+            if self.initialise == False:
+                state = self.generate_two(self.size)
+            else:
+                state = self.generate_twoColour_initialise(self.size, self.level)
         elif self.colours == 3:
             if self.initialise == False:
                 state = self.generate_threeColour(self.size)
@@ -517,6 +520,28 @@ class Wrapslide():
                             initial[i][j] = rand
                             two = two + 1
     
+        return initial
+    
+    def generate_twoColour_initialise(self, n, level):
+        if level == 1:
+            rand = random.randint(0,len(self.Level1UniqueB)-1)
+            canonical = self.Level1UniqueB[rand]
+        elif level == 2:
+            rand = random.randint(0,len(self.Level2UniqueB)-1)
+            canonical = self.Level2UniqueB[rand]
+        elif level == 3:
+            rand = random.randint(0,len(self.Level3UniqueB)-1)
+            canonical = self.Level3UniqueB[rand]
+        elif level == 4:
+            rand = random.randint(0,len(self.Level4UniqueB)-1)
+            canonical = self.Level4UniqueB[rand]
+        elif level == 5:
+            rand = random.randint(0,len(self.Level5UniqueB)-1)
+            canonical = self.Level5UniqueB[rand]
+        elif level == 6:
+            rand = random.randint(0,len(self.Level6UniqueB)-1)
+            canonical = self.Level6UniqueB[rand]
+        initial = self.CanonicalToGrid(canonical)
         return initial
     
     def generate_threeColour(self, n):
