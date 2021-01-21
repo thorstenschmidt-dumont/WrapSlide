@@ -2,14 +2,14 @@ from setuptools import setup
 from setuptools import find_packages
 
 
-setup(name='keras-rl',
-      version='0.4.2',
-      description='Deep Reinforcement Learning for Keras',
-      author='Matthias Plappert',
-      author_email='matthiasplappert@me.com',
-      url='https://github.com/keras-rl/keras-rl',
+setup(name='keras-rl2',
+      version='1.0.4',
+      description='Deep Reinforcement Learning for Tensorflow 2 Keras',
+      author='Taylor McNally',
+      author_email='taylor.mcnally@emory.edu',
+      url='https://github.com/wau/keras-rl2',
       license='MIT',
-      install_requires=['keras>=2.0.7'],
+      install_requires=['tensorflow>=2.1.0'],
       extras_require={
           'gym': ['gym'],
       },

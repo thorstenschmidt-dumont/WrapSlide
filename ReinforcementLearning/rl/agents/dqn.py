@@ -1,9 +1,9 @@
 from __future__ import division
 import warnings
 
-import keras.backend as K
-from keras.models import Model
-from keras.layers import Lambda, Input, Layer, Dense
+import tensorflow.keras.backend as K
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Lambda, Input, Layer, Dense
 
 from rl.core import Agent
 from rl.policy import EpsGreedyQPolicy, GreedyQPolicy
@@ -46,8 +46,6 @@ class AbstractDQNAgent(Agent):
         self.target_model_update = target_model_update
         self.delta_clip = delta_clip
         self.custom_model_objects = custom_model_objects
-        self.stateList = []
-        self.stateList1 = []
 
         # Related objects.
         self.memory = memory
@@ -100,16 +98,13 @@ class DQNAgent(AbstractDQNAgent):
             `avg`: Q(s,a;theta) = V(s;theta) + (A(s,a;theta)-Avg_a(A(s,a;theta)))
             `max`: Q(s,a;theta) = V(s;theta) + (A(s,a;theta)-max_a(A(s,a;theta)))
             `naive`: Q(s,a;theta) = V(s;theta) + A(s,a;theta)
-
     """
     def __init__(self, model, policy=None, test_policy=None, enable_double_dqn=False, enable_dueling_network=False,
                  dueling_type='avg', *args, **kwargs):
         super(DQNAgent, self).__init__(*args, **kwargs)
 
         # Validate (important) input.
-        if hasattr(model.output, '__len__') and len(model.output) > 1:
-            raise ValueError('Model "{}" has more than one output. DQN expects a model that has a single output.'.format(model))
-        if model.output._keras_shape != (None, self.nb_actions):
+        if list(model.output.shape) != list((None, self.nb_actions)):
             raise ValueError('Model output "{}" has invalid shape. DQN expects a model that has one dimension for each action, in this case {}.'.format(model.output, self.nb_actions))
 
         # Parameters.
@@ -119,7 +114,7 @@ class DQNAgent(AbstractDQNAgent):
         if self.enable_dueling_network:
             # get the second last layer of the model, abandon the last layer
             layer = model.layers[-2]
-            nb_action = model.output._keras_shape[-1]
+            nb_action = model.output.shape[-1]
             # layer y has a shape (nb_action+1,)
             # y[:,0] represents V(s;theta)
             # y[:,1:] represents A(s,a;theta)
@@ -236,7 +231,6 @@ class DQNAgent(AbstractDQNAgent):
         # Book-keeping.
         self.recent_observation = observation
         self.recent_action = action
-        #print(action)
 
         return action
 
@@ -607,9 +601,9 @@ class NAFAgent(AbstractDQNAgent):
         # Build combined model.
         a_in = Input(shape=(self.nb_actions,), name='action_input')
         if type(self.V_model.input) is list:
-            observation_shapes = [i._keras_shape[1:] for i in self.V_model.input]
+            observation_shapes = [i.shape[1:] for i in self.V_model.input]
         else:
-            observation_shapes = [self.V_model.input._keras_shape[1:]]
+            observation_shapes = [self.V_model.input.shape[1:]]
         os_in = [Input(shape=shape, name='observation_input_{}'.format(idx)) for idx, shape in enumerate(observation_shapes)]
         L_out = self.L_model([a_in] + os_in)
         V_out = self.V_model(os_in)

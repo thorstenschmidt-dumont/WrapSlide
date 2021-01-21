@@ -3,9 +3,9 @@ import random
 import numpy as np
 from numpy.testing import assert_allclose
 
-from keras.models import Sequential
-from keras.layers import Dense, Activation
-from keras.optimizers import Adam
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Activation
+from tensorflow.keras.optimizers import Adam
 from rl.agents import DQNAgent, CEMAgent, SARSAAgent
 from rl.policy import EpsGreedyQPolicy
 from rl.memory import SequentialMemory, EpisodeParameterMemory

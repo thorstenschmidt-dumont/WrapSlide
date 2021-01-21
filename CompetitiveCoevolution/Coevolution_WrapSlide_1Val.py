@@ -240,22 +240,24 @@ def PSO(n_input, n_output, n_hidden, first, Swarm, SwarmSize):
         Tracker += 1
         Vmax = 0.75#1/(1 + np.exp(-slope*(iterations - (MaxIterations/2))))
         print("Search iterations: ", iterations)
+        """
         # Determine GBest
         for i in range(SwarmSize):
             if PBest[i, size] > GBest[size]:
                 for j in range(size+1):
                     GBest[j] = PBest[i, j]
+        """
         
         for i in range(SwarmSize):
             if normal == True:
                 # No velocity clamping
-                for j in range(size):
-                    r1 = np.random.random()
-                    r2 = np.random.random()
-                    if SwarmValue[i, size] == GBest[size]:
-                        Velocity[i, j] = rho*(np.random.random()*0.01-0.005)
-                    else:
-                        Velocity[i, j] = w*Velocity[i, j] + c1*r1*(PBest[i, j]-SwarmValue[i, j]) + c2*r2*(GBest[j]-SwarmValue[i, j])
+                #for j in range(size):
+                r1 = np.random.random(size)
+                r2 = np.random.random(size)
+                if SwarmValue[i, size] == GBest[size]:
+                    Velocity[i, :] = rho*(np.random.random(size)*0.01-0.005)
+                else:
+                    Velocity[i, :] = w*Velocity[i, :] + c1*r1*(PBest[i, 0:size]-SwarmValue[i, 0:size]) + c2*r2*(GBest[0:size]-SwarmValue[i, 0:size])
             if normalised == True:
                 # Nomalised velocity clamping
                 for j in range(size):
@@ -284,10 +286,12 @@ def PSO(n_input, n_output, n_hidden, first, Swarm, SwarmSize):
                 Velocity[i, :] = np.random.normal(0,0.38822,size)     
          
         # Move particles
+        Swarm = Swarm + Velocity
+        """
         for i in range(SwarmSize):
             for j in range(size):
                 Swarm[i, j] = Velocity[i, j] + Swarm[i, j]
-
+        """
         # Determine new objective value
         ObjValue = Objective(Swarm, weights, bias, n_input, n_output, n_hidden)
         print(ObjValue)
@@ -296,13 +300,19 @@ def PSO(n_input, n_output, n_hidden, first, Swarm, SwarmSize):
         for i in range(SwarmSize):
             if PBest[i, size] < SwarmValue[i, size]:
                 PBest[i, :] = SwarmValue[i, :]
-
+                if GBest[size] < SwarmValue[i, size]:
+                    GBest = SwarmValue[i, :]
+                    Tracker = 0
+        if max(ObjValue) == (Game.level*multiplier - Game.level):
+            break
+        """
         # Determine GBest
         for i in range(SwarmSize):
             if PBest[i, size] > GBest[size]:
                 for j in range(size+1):
                     GBest[j] = PBest[i, j]
                     Tracker = 0
+        """
         MeanVelocity.append(np.mean(np.absolute(Velocity)))
     MeanVelocity = np.array(MeanVelocity)
     # MeanVel = np.mean(MeanVelocity)
@@ -320,7 +330,7 @@ done = False
 steps = 0
 n_input = size**2
 n_output = 1
-n_hidden = [20,20]
+n_hidden = [20]
 SwarmSize = 20
 Game.level = 1
 #pool = Pool(cpu_count())

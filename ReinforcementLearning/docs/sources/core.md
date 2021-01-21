@@ -1,4 +1,4 @@
-<span style="float:right;">[[source]](https://github.com/keras-rl/keras-rl/blob/master/rl/core.py#L11)</span>
+<span style="float:right;">[[source]](https://github.com/waukeras-rl2/blob/master/rl/core.py#L11)</span>
 ### Agent
 
 ```python
@@ -30,7 +30,7 @@ __Arguments__
 
 ----
 
-<span style="float:right;">[[source]](https://github.com/keras-rl/keras-rl/blob/master/rl/core.py#L454)</span>
+<span style="float:right;">[[source]](https://github.com/wau/keras-rl2/blob/master/rl/core.py#L454)</span>
 ### Processor
 
 ```python

@@ -33,7 +33,8 @@ ENV_NAME = 'wrapslide-v0'
 size = int(nb_actions/4+1)
 colours = env.colours
 Neurons = 100
-Layers = 4
+Layers = 3
+Convolution = 2
 
 INPUT_SHAPE = (size, size)
 WINDOW_LENGTH = 1
@@ -61,29 +62,23 @@ class AtariProcessor(Processor):
 # Next, we build our model. We use the same model that was described by Mnih et al. (2015).
 input_shape = (WINDOW_LENGTH,) + INPUT_SHAPE
 model = Sequential()
-if K.common.image_dim_ordering() == 'tf':
-    # (width, height, channels)
-    model.add(Permute((2, 3, 1), input_shape=input_shape))
-elif K.common.image_dim_ordering() == 'th':
-    # (channels, width, height)
-    model.add(Permute((1, 2, 3), input_shape=input_shape))
-else:
-    raise RuntimeError('Unknown image_dim_ordering.')
-model.add(Convolution2D(16, (int(size/2), int(size/2)), strides=(1, 1)))
+model.add(Permute((2, 3, 1), input_shape=input_shape))
+model.add(Convolution2D(size**2, (int(size/2), int(size/2)), strides=(2, 2)))
 model.add(Activation('relu'))
-#model.add(Convolution2D(16, (1, 1), strides=(1, 1)))
+#model.add(Convolution2D((size**2)*2, (int(size/2), int(size/2)), strides=(1, 1)))
 #model.add(Activation('relu'))
-#model.add(Convolution2D(64, (2, 2), strides=(2, 1)))
+#model.add(Convolution2D((size**2)*2, (int(size/2), int(size/2)), strides=(1, 1)))
 #model.add(Activation('relu'))
 model.add(Flatten())
-model.add(Dense(100))
+model.add(Dense(20))
 model.add(Activation('sigmoid'))
-model.add(Dense(100))
-model.add(Activation('sigmoid'))
-model.add(Dense(100))
-model.add(Activation('sigmoid'))
+#model.add(Dense(100))
+#model.add(Activation('sigmoid'))
+#model.add(Dense(100))
+#model.add(Activation('sigmoid'))
 model.add(Dense(nb_actions))
 model.add(Activation('sigmoid'))
+model.build()
 print(model.summary())
 
 # Finally, we configure and compile our agent. You can use every built-in Keras optimizer and
@@ -107,54 +102,38 @@ test_policy = GreedyQTestPolicy()
 # Feel free to give it a try!
 
 dqn = DQNAgent(model=model, nb_actions=nb_actions, policy=policy, test_policy = test_policy, memory=memory,
-               processor=processor, nb_steps_warmup=10, gamma=.99, target_model_update=1e-2)
-               
+               processor=processor, nb_steps_warmup=10, gamma=.99, target_model_update=1e-2)#,
+               #train_interval=1, delta_clip=1.)
 dqn.compile(Adam(lr=.00025), metrics=['mae'])
 
-
-"""
-if args.mode == 'train':
-    # Okay, now it's time to learn something! We capture the interrupt exception so that training
-    # can be prematurely aborted. Notice that now you can use the built-in Keras callbacks!
-    weights_filename = 'dqn_{}_weights.h5f'.format(args.env_name)
-    checkpoint_weights_filename = 'dqn_' + args.env_name + '_weights_{step}.h5f'
-    log_filename = 'dqn_{}_log.json'.format(args.env_name)
-    callbacks = [ModelIntervalCheckpoint(checkpoint_weights_filename, interval=250000)]
-    callbacks += [FileLogger(log_filename, interval=100)]
-    dqn.fit(env, callbacks=callbacks, nb_steps=50000, log_interval=10000)
-
-    # After training is done, we save the final weights one more time.
-    dqn.save_weights(weights_filename, overwrite=True)
-
-    # Finally, evaluate our algorithm for 10 episodes.
-    #dqn.test(env, nb_episodes=10, visualize=False)
-elif args.mode == 'test':
-    weights_filename = 'dqn_{}_weights.h5f'.format(args.env_name)
-    if args.weights:
-        weights_filename = args.weights
-    dqn.load_weights(weights_filename)
-    dqn.test(env, nb_episodes=10, visualize=False)
-"""
 #dqn.load_weights('dqn_{}_weights_{}Col_{}Neurons_{}Layers_{}x_Convnet_Sigmoid.h5f'.format(ENV_NAME,colours,Neurons,Layers,size))
    
 #Now lets learn something
-dqn.fit(env, nb_steps=10000, visualize=False, verbose=2)
+dqn.fit(env, nb_steps=1000000, visualize=False, verbose=2)
 
 # After training is done, we save the final weights.
-#sdqn.save_weights('dqn_{}_weights_{}Col_{}Neurons_{}Layers_{}x_Convnet_Sigmoid.h5f'.format(ENV_NAME,colours,Neurons,Layers,size), overwrite=True)
+dqn.save_weights('dqn_{}_weights_{}Col_{}Neurons_{}Layers_{}x_Convnet_Sigmoid.h5f'.format(ENV_NAME,colours,Neurons,Layers,size), overwrite=True)
 
-"""
-for i in range(50):
-    print(i)
-    dqn.load_weights('dqn_{}_weights_{}Col_{}Neurons_{}Layers_{}x_Convnet_Sigmoid.h5f'.format(ENV_NAME,colours,Neurons,Layers,size))
-    
-    # Okay, now it's time to learn something! We visualize the training here for show, but this
-    # slows down training quite a lot. You can always safely abort the training prematurely using
-    # Ctrl + C.
-    dqn.fit(env, nb_steps=1000, visualize=False, verbose=2)
-    
-    # After training is done, we save the final weights.
-    dqn.save_weights('dqn_{}_weights_{}Col_{}Neurons_{}Layers_{}x_Convnet_Sigmoid.h5f'.format(ENV_NAME,colours,Neurons,Layers,size), overwrite=True)
-"""
+for j in range(6):
+    env.level = j + 1
+    for i in range(50):
+        print(i)
+        dqn.load_weights('dqn_{}_weights_{}Col_{}Neurons_{}Layers_{}x_Convnet_Sigmoid.h5f'.format(ENV_NAME,colours,Neurons,Layers,size))
+        
+        # Okay, now it's time to learn something! We visualize the training here for show, but this
+        # slows down training quite a lot. You can always safely abort the training prematurely using
+        # Ctrl + C.
+        dqn.fit(env, nb_steps=1000, visualize=False, verbose=2)
+        
+        # After training is done, we save the final weights.
+        dqn.save_weights('dqn_{}_weights_{}Col_{}Neurons_{}Layers_{}x_Convnet_Sigmoid.h5f'.format(ENV_NAME,colours,Neurons,Layers,size), overwrite=True)
+
+env.initialise = False
+dqn.load_weights('dqn_{}_weights_{}Col_{}Neurons_{}Layers_{}x_Convnet_Sigmoid.h5f'.format(ENV_NAME,colours,Neurons,Layers,size))
+dqn.fit(env, nb_steps=1000000, visualize=False, verbose=2)
+dqn.save_weights('dqn_{}_weights_{}Col_{}Neurons_{}Layers_{}x_Convnet_Sigmoid.h5f'.format(ENV_NAME,colours,Neurons,Layers,size), overwrite=True)
+dqn.load_weights('dqn_{}_weights_{}Col_{}Neurons_{}Layers_{}x_Convnet_Sigmoid.h5f'.format(ENV_NAME,colours,Neurons,Layers,size))
+
 # Finally, evaluate our algorithm for 5 episodes.
-#dqn.test(env, nb_episodes=100, visualize=False)
+env.test = True
+dqn.test(env, nb_episodes=100, visualize=False)

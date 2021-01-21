@@ -5,8 +5,8 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 
-from keras.models import Sequential, Model
-from keras.layers import Input, Dense, Flatten, Concatenate
+from tensorflow.keras.models import Sequential, Model
+from tensorflow.keras.layers import Input, Dense, Flatten, Concatenate
 
 from rl.agents.dqn import NAFLayer, DQNAgent, NAFAgent
 from rl.memory import SequentialMemory

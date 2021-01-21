@@ -1,8 +1,8 @@
-site_name: Keras-RL Documentation
+site_name: Keras-RL2 Documentation
 theme: readthedocs
 docs_dir: docs/sources
-repo_url: https://github.com/keras-rl/keras-rl
-site_description: 'Documentation for Keras-RL, a library for Deep Reinforcement Learning with Keras.'
+repo_url: https://github.com/wau/keras-rl2
+site_description: 'Documentation for Keras-RL2, a library for Deep Reinforcement Learning with Keras.'
 #markdown_extensions: [mdx_math]
 #extra_javascript: ['https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML']
 

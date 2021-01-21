@@ -1,9 +1,9 @@
-Please make sure that the boxes below are checked before you submit your issue. If your issue is an implementation question, please ask your question in the [Keras-RL Google group](https://groups.google.com/forum/#!forum/keras-rl-users) or [join the Keras-RL Gitter channel](https://gitter.im/keras-rl/Lobby) and ask there instead of filing a GitHub issue.
+Please make sure that the boxes below are checked before you submit your issue. If your issue is an implementation question, please ask your question in the [Discord](https://discord.gg/FfRgSU).
 
 Thank you!
 
 - [ ] Check that you are up-to-date with the master branch of Keras-RL. You can update with:
-`pip install git+git://github.com/keras-rl/keras-rl.git --upgrade --no-deps`
+`pip install git+git://github.com/wau/keras-rl2.git --upgrade --no-deps`
 
 - [ ] Check that you are up-to-date with the master branch of Keras. You can update with:
 `pip install git+git://github.com/fchollet/keras.git --upgrade --no-deps`

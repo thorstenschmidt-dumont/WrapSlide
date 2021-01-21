@@ -1,0 +1,2 @@
+model_checkpoint_path: "dqn_wrapslide-v0_weights_2Col_100Neurons_3Layers_4x_Convnet_Sigmoid.h5f"
+all_model_checkpoint_paths: "dqn_wrapslide-v0_weights_2Col_100Neurons_3Layers_4x_Convnet_Sigmoid.h5f"

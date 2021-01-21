@@ -3,10 +3,10 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 
-from keras.models import Model, Sequential
-from keras.layers import Input, Dense, Concatenate
-from keras.optimizers import SGD
-import keras.backend as K
+from tensorflow.keras.models import Model, Sequential
+from tensorflow.keras.layers import Input, Dense, Concatenate
+from tensorflow.keras.optimizers import SGD
+import tensorflow.keras.backend as K
 
 from rl.util import clone_optimizer, clone_model, huber_loss, WhiteningNormalizer
 

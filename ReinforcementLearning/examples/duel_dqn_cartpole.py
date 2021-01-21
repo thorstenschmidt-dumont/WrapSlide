@@ -1,16 +1,16 @@
 import numpy as np
 import gym
 
-from keras.models import Sequential
-from keras.layers import Dense, Activation, Flatten
-from keras.optimizers import Adam
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Activation, Flatten
+from tensorflow.keras.optimizers import Adam
 
 from rl.agents.dqn import DQNAgent
 from rl.policy import BoltzmannQPolicy
 from rl.memory import SequentialMemory
 
-import gym_wrapslide
-ENV_NAME = 'wrapslide-v0'
+
+ENV_NAME = 'CartPole-v0'
 
 
 # Get the environment and extract the number of actions.
@@ -33,7 +33,7 @@ model.add(Activation('relu'))
 model.add(Dense(nb_actions, activation='linear'))
 print(model.summary())
 
-# Finally, we configure and compile our agent. You can use every built-in Keras optimizer and
+# Finally, we configure and compile our agent. You can use every built-in tensorflow.keras optimizer and
 # even the metrics!
 memory = SequentialMemory(limit=50000, window_length=1)
 policy = BoltzmannQPolicy()

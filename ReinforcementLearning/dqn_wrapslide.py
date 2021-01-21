@@ -32,8 +32,11 @@ print(obv)
 print(env.observation_space.shape)
 size = int(nb_actions/4+1)
 colours = env.colours
-Neurons = 100
+Neurons = 20
 Layers = 1
+env.initialise = True
+env.convnet = False
+env.test = False
 
 #input_shape = (18, 3, 1)
 input_shape = (size**2,)
@@ -42,9 +45,9 @@ num_classes = nb_actions
 
 model = Sequential()
 model.add(Flatten(input_shape=(1,) + input_shape))
+#model.add(Dense(Neurons, activation='sigmoid'))
+#model.add(Dense(Neurons, activation='sigmoid'))
 model.add(Dense(Neurons, activation='sigmoid'))
-#model.add(Dense(Neurons, activation='sigmoid'))
-#model.add(Dense(Neurons, activation='sigmoid'))
 model.add(Dense(num_classes, activation='sigmoid'))
 model.summary()
 
@@ -59,24 +62,33 @@ dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 
 #dqn.load_weights('dqn_{}_weights_3Col.h5f'.format(ENV_NAME))
 
+
 #Now lets learn something
 dqn.fit(env, nb_steps=1000, visualize=False, verbose=2)
 
 # After training is done, we save the final weights.
-#dqn.save_weights('dqn_{}_weights_{}Col_{}Neurons_{}Layers_{}x.h5f'.format(ENV_NAME,colours,Neurons,Layers,size), overwrite=True)
-#dqn.save_weights('dqn_{}_weights_3Col.h5f'.format(ENV_NAME), overwrite=True)
-"""
-for i in range(50):
-    print(i)
-    dqn.load_weights('dqn_{}_weights_3Col.h5f'.format(ENV_NAME))
-    
-    # Okay, now it's time to learn something! We visualize the training here for show, but this
-    # slows down training quite a lot. You can always safely abort the training prematurely using
-    # Ctrl + C.
-    dqn.fit(env, nb_steps=1000, visualize=False, verbose=2)
-    
-    # After training is done, we save the final weights.
-    dqn.save_weights('dqn_{}_weights_3Col.h5f'.format(ENV_NAME), overwrite=True)
-"""
+dqn.save_weights('dqn_{}_weights_{}Col_{}Neurons_{}Layers_{}x.h5f'.format(ENV_NAME,colours,Neurons,Layers,size), overwrite=True)
+
+for j in range(6):
+    env.level = j + 1
+    for i in range(50):
+        print(i)
+        dqn.load_weights('dqn_{}_weights_{}Col_{}Neurons_{}Layers_{}x.h5f'.format(ENV_NAME,colours,Neurons,Layers,size))
+        
+        # Okay, now it's time to learn something! We visualize the training here for show, but this
+        # slows down training quite a lot. You can always safely abort the training prematurely using
+        # Ctrl + C.
+        dqn.fit(env, nb_steps=1000, visualize=False, verbose=2)
+        
+        # After training is done, we save the final weights.
+        dqn.save_weights('dqn_{}_weights_{}Col_{}Neurons_{}Layers_{}x.h5f'.format(ENV_NAME,colours,Neurons,Layers,size), overwrite=True)
+
+env.initialise = False
+dqn.load_weights('dqn_{}_weights_{}Col_{}Neurons_{}Layers_{}x.h5f'.format(ENV_NAME,colours,Neurons,Layers,size))
+dqn.fit(env, nb_steps=1000000, visualize=False, verbose=2)
+dqn.save_weights('dqn_{}_weights_{}Col_{}Neurons_{}Layers_{}x.h5f'.format(ENV_NAME,colours,Neurons,Layers,size), overwrite=True)
+dqn.load_weights('dqn_{}_weights_{}Col_{}Neurons_{}Layers_{}x.h5f'.format(ENV_NAME,colours,Neurons,Layers,size))
+
 # Finally, evaluate our algorithm for 5 episodes.
+env.test = True
 dqn.test(env, nb_episodes=100, visualize=False)

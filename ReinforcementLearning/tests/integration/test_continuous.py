@@ -3,9 +3,9 @@ import random
 import numpy as np
 import gym
 
-from keras.models import Sequential, Model
-from keras.layers import Dense, Activation, Flatten, Input, Concatenate
-from keras.optimizers import Adam
+from tensorflow.keras.models import Sequential, Model
+from tensorflow.keras.layers import Dense, Activation, Flatten, Input, Concatenate
+from tensorflow.keras.optimizers import Adam
 
 from rl.agents import NAFAgent, DDPGAgent
 from rl.random import OrnsteinUhlenbeckProcess

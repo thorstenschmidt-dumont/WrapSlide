@@ -1,9 +1,9 @@
 import numpy as np
 import gym
 
-from keras.models import Sequential
-from keras.layers import Dense, Activation, Flatten
-from keras.optimizers import Adam
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Activation, Flatten
+from tensorflow.keras.optimizers import Adam
 
 from rl.agents.cem import CEMAgent
 from rl.memory import EpisodeParameterMemory
@@ -41,7 +41,7 @@ model.add(Activation('softmax'))
 print(model.summary())
 
 
-# Finally, we configure and compile our agent. You can use every built-in Keras optimizer and
+# Finally, we configure and compile our agent. You can use every built-in tensorflow.keras optimizer and
 # even the metrics!
 memory = EpisodeParameterMemory(limit=1000, window_length=1)
 

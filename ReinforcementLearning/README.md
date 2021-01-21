@@ -1,8 +1,22 @@
-# Deep Reinforcement Learning for Keras
-[![Build Status](https://api.travis-ci.org/keras-rl/keras-rl.svg?branch=master)](https://travis-ci.org/keras-rl/keras-rl)
-[![Documentation](https://readthedocs.org/projects/keras-rl/badge/)](http://keras-rl.readthedocs.io/)
-[![License](https://img.shields.io/github/license/mashape/apistatus.svg?maxAge=2592000)](https://github.com/keras-rl/keras-rl/blob/master/LICENSE)
-[![Join the chat at https://gitter.im/keras-rl/Lobby](https://badges.gitter.im/keras-rl/Lobby.svg)](https://gitter.im/keras-rl/Lobby)
+<p align="center">
+   <img src="./assets/kerasrl2g.png" width="535" height="201" />
+   <br>
+   <a>
+      <img src="https://img.shields.io/badge/python-3.7+-blue.svg" alt="Gitter">
+   </a>
+   <a>
+      <img src="https://camo.githubusercontent.com/7ce7d8e78ad8ddab3bea83bb9b98128528bae110/68747470733a2f2f616c65656e34322e6769746875622e696f2f6261646765732f7372632f74656e736f72666c6f772e737667" alt="Gitter">
+   </a>
+   <a href="https://opensource.org/licenses/MIT">
+      <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="Gitter">
+   </a>
+   <a href="https://opensource.org/licenses/MIT">
+      <img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2Fwau%2Fkeras-rl2.svg?type=shield" alt="Gitter">
+   </a>
+   <a href="http://keras-rl2.readthedocs.io/">
+      <img src="https://readthedocs.org/projects/keras-rl2/badge/?version=latest" alt="Gitter">
+   </a> 
+   <h3 align="center">Deep Reinforcement Learning for Tensorflow 2 Keras</h3></p>
 
 
 <table>
@@ -13,15 +27,17 @@
   </tr>
 </table>
 
+### NOTE: Requires tensorflow==2.1.0
+
 
 ## What is it?
 
-`keras-rl` implements some state-of-the art deep reinforcement learning algorithms in Python and seamlessly integrates with the deep learning library [Keras](http://keras.io).
+`keras-rl2` implements some state-of-the art deep reinforcement learning algorithms in Python and seamlessly integrates with the deep learning library [Keras](http://keras.io).
 
-Furthermore, `keras-rl` works with [OpenAI Gym](https://gym.openai.com/) out of the box. This means that evaluating and playing around with different algorithms is easy.
+Furthermore, `keras-rl2` works with [OpenAI Gym](https://gym.openai.com/) out of the box. This means that evaluating and playing around with different algorithms is easy.
 
-Of course you can extend `keras-rl` according to your own needs. You can use built-in Keras callbacks and metrics or define your own.
-Even more so, it is easy to implement your own environments and even algorithms by simply extending some simple abstract classes. Documentation is available [online](http://keras-rl.readthedocs.org).
+Of course you can extend `keras-rl2` according to your own needs. You can use built-in Keras callbacks and metrics or define your own.
+Even more so, it is easy to implement your own environments and even algorithms by simply extending some simple abstract classes. Documentation is available [online](http://keras-rl2.readthedocs.org).
 
 
 ## What is included?
@@ -42,18 +58,18 @@ You can find more information on each agent in the [doc](http://keras-rl.readthe
 
 ## Installation
 
-- Install Keras-RL from Pypi (recommended):
+- Install Keras-RL2 from Pypi (recommended):
 
 ```
-pip install keras-rl
+pip install keras-rl2
 ```
 
 - Install from Github source:
 
 ```
-git clone https://github.com/keras-rl/keras-rl.git
+git clone https://github.com/wau/keras-rl2.git
 cd keras-rl
-python setup.py install
+python install .
 ```
 
 ## Examples
@@ -73,29 +89,11 @@ python examples/dqn_cartpole.py
 This is a very simple example and it should converge relatively quickly, so it's a great way to get started!
 It also visualizes the game during training, so you can watch it learn. How cool is that?
 
-Some sample weights are available on [keras-rl-weights](https://github.com/matthiasplappert/keras-rl-weights).
+
 
 If you have questions or problems, please file an issue or, even better, fix the problem yourself and submit a pull request!
 
-## External Projects
 
-- [Starcraft II Learning Environment](https://soygema.github.io/starcraftII_machine_learning/#0)
-
-You're using Keras-RL on a project? Open a PR and share it!
-
-## Citing
-
-If you use `keras-rl` in your research, you can cite it as follows:
-```bibtex
-@misc{plappert2016kerasrl,
-    author = {Matthias Plappert},
-    title = {keras-rl},
-    year = {2016},
-    publisher = {GitHub},
-    journal = {GitHub repository},
-    howpublished = {\url{https://github.com/keras-rl/keras-rl}},
-}
-```
 
 ## References
 

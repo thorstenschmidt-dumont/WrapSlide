@@ -3,8 +3,8 @@ from collections import deque
 from copy import deepcopy
 
 import numpy as np
-import keras.backend as K
-from keras.models import Model
+import tensorflow.keras.backend as K
+from tensorflow.keras.models import Model
 
 from rl.core import Agent
 from rl.util import *

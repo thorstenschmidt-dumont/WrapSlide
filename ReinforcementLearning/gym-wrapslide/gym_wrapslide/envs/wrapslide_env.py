@@ -18,11 +18,11 @@ class WrapslideEnv(gym.Env):
         
         #Define the size of the grid and the number of colours here.
         self.size = 4
-        self.colours = 3
+        self.colours = 2
         self.initialise = True
-        self.level = 6
+        self.level = 1
         self.test = False
-        self.Convnet = False
+        self.Convnet = True
         
         high = np.repeat(4, 4*self.size)
         low = np.repeat(0, 4*self.size)

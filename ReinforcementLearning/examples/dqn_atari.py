@@ -5,10 +5,10 @@ from PIL import Image
 import numpy as np
 import gym
 
-from keras.models import Sequential
-from keras.layers import Dense, Activation, Flatten, Convolution2D, Permute
-from keras.optimizers import Adam
-import keras.backend as K
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Activation, Flatten, Convolution2D, Permute
+from tensorflow.keras.optimizers import Adam
+import tensorflow.keras.backend as K
 
 from rl.agents.dqn import DQNAgent
 from rl.policy import LinearAnnealedPolicy, BoltzmannQPolicy, EpsGreedyQPolicy
@@ -55,14 +55,10 @@ nb_actions = env.action_space.n
 # Next, we build our model. We use the same model that was described by Mnih et al. (2015).
 input_shape = (WINDOW_LENGTH,) + INPUT_SHAPE
 model = Sequential()
-if K.image_dim_ordering() == 'tf':
-    # (width, height, channels)
-    model.add(Permute((2, 3, 1), input_shape=input_shape))
-elif K.image_dim_ordering() == 'th':
-    # (channels, width, height)
-    model.add(Permute((1, 2, 3), input_shape=input_shape))
-else:
-    raise RuntimeError('Unknown image_dim_ordering.')
+
+# (width, height, channels)
+model.add(Permute((2, 3, 1), input_shape=input_shape))
+
 model.add(Convolution2D(32, (8, 8), strides=(4, 4)))
 model.add(Activation('relu'))
 model.add(Convolution2D(64, (4, 4), strides=(2, 2)))
@@ -76,7 +72,7 @@ model.add(Dense(nb_actions))
 model.add(Activation('linear'))
 print(model.summary())
 
-# Finally, we configure and compile our agent. You can use every built-in Keras optimizer and
+# Finally, we configure and compile our agent. You can use every built-in tensorflow.keras optimizer and
 # even the metrics!
 memory = SequentialMemory(limit=1000000, window_length=WINDOW_LENGTH)
 processor = AtariProcessor()
@@ -102,7 +98,7 @@ dqn.compile(Adam(lr=.00025), metrics=['mae'])
 
 if args.mode == 'train':
     # Okay, now it's time to learn something! We capture the interrupt exception so that training
-    # can be prematurely aborted. Notice that now you can use the built-in Keras callbacks!
+    # can be prematurely aborted. Notice that now you can use the built-in tensorflow.keras callbacks!
     weights_filename = 'dqn_{}_weights.h5f'.format(args.env_name)
     checkpoint_weights_filename = 'dqn_' + args.env_name + '_weights_{step}.h5f'
     log_filename = 'dqn_{}_log.json'.format(args.env_name)

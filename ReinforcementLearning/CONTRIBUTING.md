@@ -1,9 +1,9 @@
 # Contributing to Keras-RL
 
-New contributors are very welcomed! If you're interested, please post a message on the [Gitter](https://gitter.im/keras-rl/Lobby).
+New contributors are very welcomed! If you're interested, please post a message on the [Discord](https://discord.gg/FfRgSU).
 
 Here is a list of ways you can contribute to this repository:
-- Tackle an open issue on [Github](https://github.com/keras-rl/keras-rl/issues)
+- Tackle an open issue on [Github](https://github.com/wau/keras-rl2/issues)
 - Improve documentation
 - Improve test coverage
 - Add examples

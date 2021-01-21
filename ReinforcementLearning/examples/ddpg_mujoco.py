@@ -3,16 +3,14 @@ import numpy as np
 import gym
 from gym import wrappers
 
-from keras.models import Sequential, Model
-from keras.layers import Dense, Activation, Flatten, Input, Concatenate
-from keras.optimizers import Adam
+from tensorflow.keras.models import Sequential, Model
+from tensorflow.keras.layers import Dense, Activation, Flatten, Input, Concatenate
+from tensorflow.keras.optimizers import Adam
 
 from rl.processors import WhiteningNormalizerProcessor
 from rl.agents import DDPGAgent
 from rl.memory import SequentialMemory
 from rl.random import OrnsteinUhlenbeckProcess
-
-import gym_wrapslide
 
 
 class MujocoProcessor(WhiteningNormalizerProcessor):
@@ -55,7 +53,7 @@ x = Activation('linear')(x)
 critic = Model(inputs=[action_input, observation_input], outputs=x)
 print(critic.summary())
 
-# Finally, we configure and compile our agent. You can use every built-in Keras optimizer and
+# Finally, we configure and compile our agent. You can use every built-in tensorflow.keras optimizer and
 # even the metrics!
 memory = SequentialMemory(limit=100000, window_length=1)
 random_process = OrnsteinUhlenbeckProcess(size=nb_actions, theta=.15, mu=0., sigma=.1)

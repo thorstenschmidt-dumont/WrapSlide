@@ -197,7 +197,6 @@ class GreedyQPolicy(Policy):
         action = np.argmax(q_values)
         return action
 
-
 class GreedyQTestPolicy(Policy):
     """Implement the greedy policy
 
